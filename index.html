@@ -409,7 +409,7 @@ function onOrientation(e) {
 
   // When phone is flat: beta is longitudinal (pitch), gamma is lateral (roll)
   const lateralDeg      = gamma;         // positive = right side lower = breaks right
-  const longitudinalDeg = -beta;         // positive = top lower = uphill toward hole
+  const longitudinalDeg = beta;           // positive = top higher = uphill toward hole
 
   const angle = Math.sqrt(lateralDeg**2 + longitudinalDeg**2);
 
