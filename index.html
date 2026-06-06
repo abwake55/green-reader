@@ -206,25 +206,6 @@
     .divider { height: 1px; background: var(--border); margin: 14px 0; }
 
     /* ── TEMPO CARD ── */
-    .tempo-card { display: flex; flex-direction: column; gap: 14px; }
-    .tempo-top { display: flex; align-items: center; justify-content: space-between; }
-    .tempo-bpm-wrap { display: flex; align-items: baseline; gap: 6px; }
-    .tempo-bpm { font-size: 2.8rem; font-weight: 800; color: var(--blue); line-height: 1; font-variant-numeric: tabular-nums; }
-    .tempo-bpm-label { font-size: 13px; color: var(--muted); font-weight: 600; }
-    .tempo-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
-    .tempo-feel-btn {
-      padding: 12px 20px; border-radius: 14px; border: none; cursor: pointer;
-      font-size: 14px; font-weight: 700; transition: all 0.15s;
-      background: rgba(77,166,255,0.15); color: var(--blue); border: 1px solid rgba(77,166,255,0.3);
-    }
-    .tempo-feel-btn.active { background: var(--blue); color: #000; border-color: var(--blue); }
-
-    /* Sweep bar */
-    .sweep-wrap { position: relative; height: 18px; background: var(--border); border-radius: 9px; overflow: hidden; }
-    .sweep-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0%; border-radius: 9px; background: var(--blue); }
-    .sweep-flash { position: absolute; left: 0; top: 0; height: 100%; width: 100%; border-radius: 9px; background: var(--green); opacity: 0; }
-    .sweep-phase-label { display: flex; justify-content: space-between; margin-top: 6px; }
-    .sweep-phase-label span { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
@@ -316,30 +297,7 @@
         <div class="metric"><div class="val" id="mLateral">0.0°</div><div class="lbl">Lateral</div></div>
       </div>
 
-      <!-- Tempo -->
-      <div class="card tempo-card">
-        <div class="tempo-top">
-          <div>
-            <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Stroke Tempo</div>
-            <div class="tempo-bpm-wrap">
-              <div class="tempo-bpm" id="tempoBpm">76</div>
-              <div class="tempo-bpm-label">BPM</div>
-            </div>
-            <div class="tempo-desc" id="tempoDesc">2:1 ratio · back on 1, through on 2</div>
-          </div>
-          <button class="tempo-feel-btn" id="tempoBtn" onclick="toggleMetronome()">▶ Feel It</button>
-        </div>
-        <!-- Sweep bar -->
-        <div>
-          <div class="sweep-wrap">
-            <div class="sweep-fill" id="sweepFill"></div>
-          </div>
-          <div class="sweep-phase-label">
-            <span id="sweepLabel">Press Feel It to start</span>
-            <span>2:1 ratio</span>
-          </div>
-        </div>
-      </div>
+
 
       <!-- Log putt -->
       <div class="log-btn-wrap">
@@ -600,7 +558,6 @@ function switchTab(tab) {
   showScreen(tab);
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-  if (tab !== 'read') stopMetronome();
   if (tab === 'stats') renderStats();
   if (tab === 'practice') resetPractice();
 }
@@ -735,7 +692,6 @@ function updateUI(r) {
   document.getElementById('mLateral').textContent = Math.abs(r.lateral).toFixed(1) + '°';
 
   drawDiagram(breakIn, puttDistance, effectiveDist);
-  updateTempo();
 }
 
 function onDistChange(val) {
@@ -1054,88 +1010,6 @@ function confirmClear() {
   if (confirm('Delete all logged putts?')) { localStorage.removeItem('gr_putts'); renderStats(); }
 }
 
-// ────────────────────────────────────────────────────────
-// TEMPO / METRONOME
-// ────────────────────────────────────────────────────────
-let metronomeActive = false;
-let metronomeTimer  = null;
-let audioCtx        = null;
-let currentBpm      = 76;
-let onBackPhase     = true; // true = backswing phase, false = through phase
-
-function calcTempo(distFeet, longitudinal) {
-  // BPM = full stroke cycles per minute
-  // Range: 82 BPM (3 ft) → 60 BPM (50 ft)
-  const base = Math.round(Math.max(60, Math.min(82, 83 - distFeet * 0.46)));
-  const adj  = longitudinal < -0.5 ? -3 : longitudinal > 0.5 ? 2 : 0;
-  return base + adj;
-}
-
-function tempoDescription(bpm, longitudinal) {
-  const feel  = bpm >= 78 ? 'Crisp, compact stroke' : bpm >= 70 ? 'Smooth, steady stroke' : 'Long, sweeping stroke';
-  const slope = longitudinal < -0.5 ? ' · stay controlled' : longitudinal > 0.5 ? ' · commit through it' : '';
-  return feel + slope;
-}
-
-function updateTempo() {
-  const bpm  = calcTempo(puttDistance, lastReading.longitudinal);
-  currentBpm = bpm;
-  document.getElementById('tempoBpm').textContent  = bpm;
-  document.getElementById('tempoDesc').textContent = tempoDescription(bpm, lastReading.longitudinal);
-  if (metronomeActive) { stopMetronome(); startMetronome(); }
-}
-
-function toggleMetronome() {
-  if (metronomeActive) stopMetronome(); else startMetronome();
-}
-
-let sweepInterval = null;
-let phaseElapsed  = 0;
-const TICK_MS     = 50; // update every 50ms
-
-function startMetronome() {
-  metronomeActive = true;
-  onBackPhase     = true;
-  phaseElapsed    = 0;
-  document.getElementById('tempoBtn').textContent = '■ Stop';
-  document.getElementById('tempoBtn').classList.add('active');
-  sweepInterval = setInterval(sweepTick, TICK_MS);
-}
-
-function stopMetronome() {
-  metronomeActive = false;
-  clearInterval(sweepInterval);
-  sweepInterval = null;
-  document.getElementById('tempoBtn').textContent = '▶ Feel It';
-  document.getElementById('tempoBtn').classList.remove('active');
-  const fill  = document.getElementById('sweepFill');
-  const label = document.getElementById('sweepLabel');
-  if (fill)  { fill.style.width = '0%'; fill.style.background = 'var(--blue)'; }
-  if (label) label.textContent = 'Press Feel It to start';
-}
-
-function sweepTick() {
-  phaseElapsed += TICK_MS;
-
-  const cycle     = (60 / currentBpm) * 1000;
-  const backMs    = cycle * (2 / 3);
-  const throughMs = cycle * (1 / 3);
-
-  const fill  = document.getElementById('sweepFill');
-  const label = document.getElementById('sweepLabel');
-
-  if (onBackPhase) {
-    const pct = Math.min(phaseElapsed / backMs, 1) * 100;
-    if (fill)  { fill.style.width = pct + '%'; fill.style.background = 'var(--blue)'; }
-    if (label) label.textContent = '← BACK...';
-    if (phaseElapsed >= backMs) { onBackPhase = false; phaseElapsed = 0; }
-  } else {
-    const pct = Math.max(1 - phaseElapsed / throughMs, 0) * 100;
-    if (fill)  { fill.style.width = pct + '%'; fill.style.background = 'var(--green)'; }
-    if (label) label.textContent = 'THROUGH! →';
-    if (phaseElapsed >= throughMs) { onBackPhase = true; phaseElapsed = 0; }
-  }
-}
 
 // ────────────────────────────────────────────────────────
 // TOAST
