@@ -205,6 +205,26 @@
     .recal-btn { display: block; margin: 14px auto 0; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
     .divider { height: 1px; background: var(--border); margin: 14px 0; }
 
+    /* ── LOCK BUTTON ── */
+    .lock-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: none; color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .lock-btn.locked { border-color: var(--gold); background: rgba(255,204,0,0.12); color: var(--gold); }
+
+    /* ── LOCKED BANNER ── */
+    .locked-banner { margin: 6px 16px 0; background: rgba(255,204,0,0.10); border: 1px solid rgba(255,204,0,0.25); border-radius: 12px; padding: 9px 14px; display: none; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--gold); }
+    .locked-banner.show { display: flex; }
+
+    /* ── GREEN SPEED ── */
+    .speed-card { display: flex; flex-direction: column; gap: 10px; }
+    .speed-card .speed-label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; }
+    .speed-card .speed-label span { color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; }
+    .speed-chips { display: flex; gap: 8px; }
+    .speed-chip { flex: 1; padding: 9px 4px; text-align: center; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .speed-chip.selected { border-color: var(--green); background: rgba(51,204,102,0.15); color: var(--green); }
+
+    /* ── QUICK RE-READ ── */
+    .action-row { display: flex; gap: 10px; margin: 10px 16px 0; }
+    .action-btn { flex: 1; padding: 13px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; }
+
     /* ── TEMPO CARD ── */
   </style>
 </head>
@@ -254,10 +274,19 @@
           <h2>Green Reader</h2>
           <div class="cal-badge ok" id="calBadge">Calibrated</div>
         </div>
-        <div class="live-dot"><span></span> Live</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔓 Lock</button>
+          <div class="live-dot" id="liveDot"><span></span> Live</div>
+        </div>
       </div>
 
-      <div class="orientation-banner">↑&nbsp; Top of phone pointing toward hole</div>
+      <!-- Locked banner -->
+      <div class="locked-banner" id="lockedBanner">
+        <span>🔒 Reading locked — walk to your ball</span>
+        <button onclick="toggleLock()" style="background:none;border:none;color:var(--gold);font-size:13px;font-weight:700;cursor:pointer">Unlock</button>
+      </div>
+
+      <div class="orientation-banner" id="orientBanner">↑&nbsp; Top of phone pointing toward hole</div>
 
       <div class="canvas-wrap">
         <canvas id="greenCanvas" height="280"></canvas>
@@ -299,12 +328,24 @@
 
 
 
-      <!-- Log putt -->
-      <div class="log-btn-wrap">
-        <button class="log-btn" onclick="openLogModal()">📋 Log this putt result</button>
+      <!-- Green speed -->
+      <div class="card speed-card">
+        <div class="speed-label">Green Speed <span id="speedLabel">Medium (Stimp 10)</span></div>
+        <div class="speed-chips">
+          <div class="speed-chip" onclick="setSpeed('slow',this)">Slow</div>
+          <div class="speed-chip selected" id="speedMedium" onclick="setSpeed('medium',this)">Medium</div>
+          <div class="speed-chip" onclick="setSpeed('fast',this)">Fast</div>
+          <div class="speed-chip" onclick="setSpeed('tour',this)">Tour</div>
+        </div>
       </div>
 
-      <button class="recal-btn" onclick="showSetup()">↺ Recalibrate</button>
+      <!-- Action row: re-read + log -->
+      <div class="action-row">
+        <button class="action-btn" onclick="quickReread()">⟳ Re-read</button>
+        <button class="action-btn" style="color:var(--gold);border-color:rgba(255,204,0,0.3);background:rgba(255,204,0,0.08)" onclick="openLogModal()">📋 Log Putt</button>
+      </div>
+
+      <button class="recal-btn" onclick="showSetup()">↺ Full recalibrate</button>
     </div>
 
     <!-- ── PRACTICE ── -->
@@ -516,6 +557,17 @@ let calibrationGamma = 0;
 let isCalibrated     = false;
 let puttDistance     = 10;
 let lastReading      = { beta:0, gamma:0, angle:0, lateral:0, longitudinal:0 };
+let frozenReading    = null;   // non-null when locked
+let isLocked         = false;
+
+// Green speed multipliers (relative to medium/stimp 10 baseline)
+const SPEED_SETTINGS = {
+  slow:   { label: 'Slow (Stimp 8)',   mult: 0.70 },
+  medium: { label: 'Medium (Stimp 10)', mult: 1.00 },
+  fast:   { label: 'Fast (Stimp 12)',  mult: 1.40 },
+  tour:   { label: 'Tour (Stimp 14)',  mult: 1.80 },
+};
+let greenSpeed = localStorage.getItem('gr_speed') || 'medium';
 let canvas, ctx;
 let currentTab = 'read';
 
@@ -576,6 +628,7 @@ function skipCalibration() {
 }
 function launchMain() {
   document.getElementById('mainNav').style.display = 'flex';
+  initSpeed();
   switchTab('read');
 }
 
@@ -621,7 +674,9 @@ function onOrientation(e) {
   const longitudinalDeg = beta;
   const angle = Math.sqrt(lateralDeg**2 + longitudinalDeg**2);
   lastReading = { beta: rawBeta, gamma: rawGamma, angle, lateral: lateralDeg, longitudinal: longitudinalDeg };
-  if (currentTab === 'read' || currentTab === 'practice') updateUI(lastReading);
+  if (currentTab === 'read' || currentTab === 'practice') {
+    if (!isLocked) updateUI(lastReading);
+  }
 }
 
 // ────────────────────────────────────────────────────────
@@ -629,7 +684,8 @@ function onOrientation(e) {
 // ────────────────────────────────────────────────────────
 function calcBreak(lateral, longitudinal, distFeet) {
   const lateralPct = Math.tan(lateral * Math.PI / 180) * 100;
-  return lateralPct * distFeet * 0.9;
+  const speedMult  = SPEED_SETTINGS[greenSpeed].mult;
+  return lateralPct * distFeet * 0.9 * speedMult;
 }
 
 function calcEffectiveDistance(longitudinal, distFeet) {
@@ -1010,6 +1066,69 @@ function confirmClear() {
   if (confirm('Delete all logged putts?')) { localStorage.removeItem('gr_putts'); renderStats(); }
 }
 
+
+// ────────────────────────────────────────────────────────
+// LOCK / FREEZE
+// ────────────────────────────────────────────────────────
+function toggleLock() {
+  isLocked = !isLocked;
+  const btn    = document.getElementById('lockBtn');
+  const banner = document.getElementById('lockedBanner');
+  const orient = document.getElementById('orientBanner');
+  const liveDot= document.getElementById('liveDot');
+
+  if (isLocked) {
+    frozenReading = { ...lastReading };
+    btn.textContent = '🔒 Locked';
+    btn.classList.add('locked');
+    banner.classList.add('show');
+    if (orient)  orient.style.display = 'none';
+    if (liveDot) liveDot.style.opacity = '0.3';
+    showToast('Reading locked 🔒');
+  } else {
+    frozenReading = null;
+    btn.textContent = '🔓 Lock';
+    btn.classList.remove('locked');
+    banner.classList.remove('show');
+    if (orient)  orient.style.display = 'flex';
+    if (liveDot) liveDot.style.opacity = '1';
+    updateUI(lastReading);
+  }
+}
+
+// ────────────────────────────────────────────────────────
+// GREEN SPEED
+// ────────────────────────────────────────────────────────
+function setSpeed(speed, el) {
+  greenSpeed = speed;
+  localStorage.setItem('gr_speed', speed);
+  document.querySelectorAll('.speed-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('speedLabel').textContent = SPEED_SETTINGS[speed].label;
+  updateUI(isLocked ? frozenReading : lastReading);
+  showToast('Green speed: ' + SPEED_SETTINGS[speed].label);
+}
+
+function initSpeed() {
+  const speed = greenSpeed;
+  document.getElementById('speedLabel').textContent = SPEED_SETTINGS[speed].label;
+  // Select the right chip
+  const chips = document.querySelectorAll('.speed-chip');
+  const labels = ['slow','medium','fast','tour'];
+  chips.forEach((c, i) => {
+    c.classList.toggle('selected', labels[i] === speed);
+  });
+}
+
+// ────────────────────────────────────────────────────────
+// QUICK RE-READ
+// ────────────────────────────────────────────────────────
+function quickReread() {
+  if (isLocked) { toggleLock(); } // unlock first
+  calibrate();
+  updateUI(lastReading);
+  showToast('Re-read ✓');
+}
 
 // ────────────────────────────────────────────────────────
 // TOAST
