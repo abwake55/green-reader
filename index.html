@@ -101,11 +101,11 @@
 
     /* ── BREAK SUMMARY CARD ── */
     .break-card { display: flex; align-items: center; justify-content: space-between; }
-    .break-amount { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
-    .break-dir { font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
+    .break-amount { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+    .break-dir { font-size: 1rem; font-weight: 700; margin-top: 2px; }
     .severity-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
     .break-right { text-align: right; }
-    .clock-label { font-size: 1rem; font-weight: 700; }
+    .clock-label { font-size: 1.6rem; font-weight: 800; }
     .clock-sub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
     .pace-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .pace-label-text { font-size: 11px; color: var(--muted); }
@@ -295,15 +295,15 @@
       <!-- Break summary -->
       <div class="card break-card">
         <div>
-          <div id="breakAmount" class="break-amount" style="color:var(--green)">0.0"</div>
-          <div id="breakDir" class="break-dir"></div>
-          <div id="straightLabel" style="display:none;font-size:1.1rem;font-weight:700">Straight putt</div>
-          <div id="sevBadge" class="severity-badge">Flat</div>
-        </div>
-        <div class="break-right">
           <div class="clock-sub">Aim Point</div>
           <div id="clockLabel" class="clock-label">12 o'clock</div>
           <div id="updownBadge" style="display:none" class="updown-badge"></div>
+          <div id="sevBadge" class="severity-badge">Flat</div>
+        </div>
+        <div class="break-right">
+          <div id="breakAmount" class="break-amount" style="color:var(--green)">0.0"</div>
+          <div id="breakDir" class="break-dir"></div>
+          <div id="straightLabel" style="display:none;font-size:1.1rem;font-weight:700">Straight putt</div>
           <div class="pace-row" style="border:none;padding:0;margin-top:8px">
             <span class="pace-label-text" style="margin-right:6px">Pace:</span>
             <span class="pace-value" id="paceLabel">10 ft</span>
