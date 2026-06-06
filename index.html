@@ -554,6 +554,8 @@ let puttDistance     = 10;
 let lastReading      = { beta:0, gamma:0, angle:0, lateral:0, longitudinal:0 };
 let frozenReading    = null;   // non-null when locked
 let isLocked         = false;
+let readingBuffer    = [];     // smoothing buffer
+let wakeLock         = null;
 
 // Green speed multipliers (relative to medium/stimp 10 baseline)
 const SPEED_SETTINGS = {
@@ -605,6 +607,7 @@ function switchTab(tab) {
   showScreen(tab);
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  if (tab === 'read' || tab === 'practice') requestWakeLock(); else releaseWakeLock();
   if (tab === 'stats') renderStats();
   if (tab === 'practice') resetPractice();
 }
@@ -653,6 +656,7 @@ function calibrate() {
   calibrationBeta  = lastReading.beta  || 0;
   calibrationGamma = lastReading.gamma || 0;
   isCalibrated = true;
+  readingBuffer = []; // clear smoothing buffer on recalibrate
   const badge = document.getElementById('calBadge');
   if (badge) { badge.textContent = 'Calibrated'; badge.className = 'cal-badge ok'; }
 }
@@ -668,7 +672,20 @@ function onOrientation(e) {
   const lateralDeg      = gamma;
   const longitudinalDeg = beta;
   const angle = Math.sqrt(lateralDeg**2 + longitudinalDeg**2);
-  lastReading = { beta: rawBeta, gamma: rawGamma, angle, lateral: lateralDeg, longitudinal: longitudinalDeg };
+  const raw = { beta: rawBeta, gamma: rawGamma, angle, lateral: lateralDeg, longitudinal: longitudinalDeg };
+
+  // Smooth over last 12 readings to reduce jitter
+  readingBuffer.push(raw);
+  if (readingBuffer.length > 12) readingBuffer.shift();
+  const n = readingBuffer.length;
+  lastReading = {
+    beta:         raw.beta,
+    gamma:        raw.gamma,
+    angle:        readingBuffer.reduce((s,r) => s + r.angle, 0) / n,
+    lateral:      readingBuffer.reduce((s,r) => s + r.lateral, 0) / n,
+    longitudinal: readingBuffer.reduce((s,r) => s + r.longitudinal, 0) / n,
+  };
+
   if (currentTab === 'read' || currentTab === 'practice') {
     if (!isLocked) updateUI(lastReading);
   }
@@ -1059,6 +1076,24 @@ function confirmClear() {
   if (confirm('Delete all logged putts?')) { localStorage.removeItem('gr_putts'); renderStats(); }
 }
 
+
+// ────────────────────────────────────────────────────────
+// WAKE LOCK
+// ────────────────────────────────────────────────────────
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+// Re-acquire if app comes back to foreground
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && (currentTab === 'read' || currentTab === 'practice')) {
+    requestWakeLock();
+  }
+});
 
 // ────────────────────────────────────────────────────────
 // LOCK / FREEZE
