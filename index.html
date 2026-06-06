@@ -12,505 +12,681 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
     :root {
-      --green:   #33cc66;
-      --bg:      #0a1a0c;
-      --card:    rgba(255,255,255,0.07);
-      --border:  rgba(255,255,255,0.10);
-      --text:    #ffffff;
-      --muted:   rgba(255,255,255,0.45);
+      --green:  #33cc66;
+      --gold:   #ffcc00;
+      --blue:   #4da6ff;
+      --orange: #ff9500;
+      --red:    #ff3b30;
+      --bg:     #0a1a0c;
+      --card:   rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.10);
+      --text:   #ffffff;
+      --muted:  rgba(255,255,255,0.45);
     }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      overflow: hidden;
-    }
-
-    /* ── SCREENS ─────────────────────────────────────────── */
-    .screen { display: none; flex-direction: column; height: 100dvh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+    /* ── LAYOUT ── */
+    .app { display: flex; flex-direction: column; height: 100dvh; }
+    .screen-area { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .screen { display: none; flex-direction: column; min-height: 100%; padding-bottom: 16px; }
     .screen.active { display: flex; }
 
-    /* ── SETUP SCREEN ────────────────────────────────────── */
-    #setup {
-      align-items: center;
-      justify-content: space-between;
-      padding: 32px 28px calc(env(safe-area-inset-bottom) + 28px);
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      display: flex; border-top: 1px solid var(--border);
+      background: rgba(10,26,12,0.96); backdrop-filter: blur(12px);
+      padding-bottom: env(safe-area-inset-bottom);
+      flex-shrink: 0;
     }
-    #setup h1 { font-size: 2rem; font-weight: 700; color: var(--text); }
-    #setup .subtitle { color: var(--green); font-size: 1.05rem; font-weight: 600; margin-top: 4px; }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 10px 0 8px; background: none; border: none; cursor: pointer; gap: 3px;
+    }
+    .nav-btn .nav-icon { font-size: 22px; }
+    .nav-btn .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; }
+    .nav-btn.active .nav-label { color: var(--green); }
+    .nav-btn.active .nav-icon  { filter: none; }
 
+    /* ── SETUP SCREEN ── */
+    #setup {
+      align-items: center; justify-content: space-between;
+      padding: calc(env(safe-area-inset-top) + 32px) 28px 28px;
+    }
+    #setup h1 { font-size: 2rem; font-weight: 700; }
+    #setup .subtitle { color: var(--green); font-size: 1.05rem; font-weight: 600; margin-top: 4px; }
     .diagram {
-      position: relative;
-      width: 220px;
-      height: 280px;
-      background: rgba(16,42,18,0.9);
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 0;
+      width: 200px; height: 260px; background: rgba(16,42,18,0.9);
+      border-radius: 20px; border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: space-between; padding: 16px 0;
     }
-    .diagram-hole {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-    }
-    .hole-circle {
-      width: 24px; height: 24px; border-radius: 50%;
-      background: #000; border: 2px solid #fff;
-    }
+    .hole-circle { width: 24px; height: 24px; border-radius: 50%; background: #000; border: 2px solid #fff; }
     .diagram-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1px; }
     .diagram-phone {
-      width: 54px; height: 96px;
-      background: rgba(20,20,30,0.95);
-      border-radius: 12px;
-      border: 2px solid rgba(255,255,255,0.5);
+      width: 54px; height: 92px; background: rgba(20,20,30,0.95);
+      border-radius: 12px; border: 2px solid rgba(255,255,255,0.5);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       position: relative;
     }
-    .diagram-phone .top-label {
-      position: absolute; top: 6px;
-      font-size: 7px; font-weight: 900; color: var(--green); letter-spacing: 1px;
-    }
+    .diagram-phone .top-label { position: absolute; top: 6px; font-size: 7px; font-weight: 900; color: var(--green); letter-spacing: 1px; }
     .diagram-phone .arrow { font-size: 26px; color: var(--green); }
-    .diagram-ball {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-    }
     .ball-circle { width: 16px; height: 16px; border-radius: 50%; background: #fff; }
-    .caption-badge {
-      background: rgba(51,204,102,0.15);
-      color: var(--green);
-      font-size: 11px; font-weight: 700;
-      padding: 5px 12px; border-radius: 20px;
-      margin-top: 8px;
-    }
-
+    .caption-badge { background: rgba(51,204,102,0.15); color: var(--green); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; margin-top: 8px; }
     .steps { width: 100%; display: flex; flex-direction: column; gap: 12px; }
     .step { display: flex; align-items: flex-start; gap: 12px; }
-    .step-num {
-      min-width: 26px; height: 26px; border-radius: 50%;
-      background: var(--green); color: #000;
-      font-size: 13px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .step-num { min-width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: #000; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
     .step p { font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.4; padding-top: 3px; }
 
-    .btn-primary {
-      width: 100%;
-      padding: 18px;
-      background: var(--green);
-      color: #000;
-      font-size: 16px; font-weight: 700;
-      border: none; border-radius: 14px;
-      cursor: pointer;
-    }
-    .btn-ghost {
-      background: none; border: none;
-      color: var(--muted); font-size: 14px;
-      cursor: pointer; padding: 8px;
-    }
+    /* ── BUTTONS ── */
+    .btn { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-ghost { background: none; color: var(--muted); font-size: 14px; }
+    .btn-sm { padding: 10px 18px; font-size: 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
 
-    /* ── READING SCREEN ──────────────────────────────────── */
-    #reading { overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom) + 20px); }
+    /* ── TOPBAR ── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 14px) 20px 10px; }
+    .topbar h2 { font-size: 1.2rem; font-weight: 700; }
+    .cal-badge { font-size: 11px; font-weight: 600; }
+    .cal-badge.ok { color: var(--green); }
+    .cal-badge.warn { color: var(--orange); }
+    .live-dot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); }
+    .live-dot span { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.2} }
 
-    .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px 8px;
-    }
-    .topbar h2 { font-size: 1.25rem; font-weight: 700; }
-    .calibrated-badge { font-size: 11px; font-weight: 600; }
-    .calibrated-badge.ok  { color: var(--green); }
-    .calibrated-badge.warn { color: #ff9500; }
+    /* ── CARDS ── */
+    .card { margin: 10px 16px 0; background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 16px 18px; }
+    .orientation-banner { margin: 6px 16px 0; background: rgba(51,204,102,0.10); border-radius: 12px; padding: 9px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
 
-    .live-dot {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--green);
-    }
-    .live-dot span {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-      animation: pulse 1.2s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
-
-    .orientation-banner {
-      margin: 0 16px 4px;
-      background: rgba(51,204,102,0.10);
-      border-radius: 12px;
-      padding: 10px 14px;
-      display: flex; align-items: center; gap: 10px;
-      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
-    }
-    .orientation-banner .icon { font-size: 18px; }
-
-    /* diagram canvas */
-    .diagram-canvas-wrap {
-      margin: 0 16px;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    #greenCanvas { display: block; width: 100%; }
-
-    /* cards */
-    .card {
-      margin: 12px 16px 0;
-      background: var(--card);
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      padding: 18px 20px;
-    }
-
+    /* ── BREAK SUMMARY CARD ── */
     .break-card { display: flex; align-items: center; justify-content: space-between; }
-    .break-left .break-amount {
-      font-size: 3rem; font-weight: 800;
-      font-variant-numeric: tabular-nums;
-    }
-    .break-left .break-dir { font-size: 1.3rem; font-weight: 700; }
-    .break-left .straight-label { font-size: 1.1rem; font-weight: 700; color: var(--text); }
-    .severity-badge {
-      display: inline-block;
-      font-size: 11px; font-weight: 700;
-      padding: 3px 10px; border-radius: 20px;
-      margin-top: 6px;
-    }
+    .break-amount { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+    .break-dir { font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
+    .severity-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
     .break-right { text-align: right; }
-    .clock-label { font-size: 1.1rem; font-weight: 700; }
-    .clock-sub { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .clock-label { font-size: 1rem; font-weight: 700; }
+    .clock-sub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
     .pace-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .pace-label { font-size: 11px; color: var(--muted); }
-    .pace-value { font-size: 13px; font-weight: 700; color: var(--text); }
-    .updown-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 11px; font-weight: 700;
-      padding: 3px 10px; border-radius: 20px;
-    }
-    .updown-badge.uphill   { background: rgba(0,122,255,0.15); color: #4da6ff; }
-    .updown-badge.downhill { background: rgba(255,149,0,0.15);  color: #ff9500; }
+    .pace-label-text { font-size: 11px; color: var(--muted); }
+    .pace-value { font-size: 13px; font-weight: 700; }
+    .updown-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
+    .updown-badge.uphill   { background: rgba(0,122,255,0.15); color: var(--blue); }
+    .updown-badge.downhill { background: rgba(255,149,0,0.15);  color: var(--orange); }
 
-    /* slider */
+    /* ── SLIDER ── */
     .slider-card label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
     .slider-card label span { font-weight: 700; color: var(--text); }
-    input[type=range] {
-      width: 100%; accent-color: var(--green);
-      height: 4px; cursor: pointer;
-    }
+    input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; }
 
-    /* metrics row */
+    /* ── METRICS ROW ── */
     .metrics { display: flex; align-items: center; }
     .metric { flex: 1; text-align: center; }
-    .metric .val { font-size: 1.15rem; font-weight: 700; }
+    .metric .val { font-size: 1.1rem; font-weight: 700; }
     .metric .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .metric-divider { width: 1px; height: 36px; background: var(--border); }
 
-    .recal-btn {
-      display: block; margin: 16px auto 0;
-      background: none; border: none;
-      color: var(--muted); font-size: 13px; cursor: pointer;
-    }
+    /* ── LOG PUTT BUTTON ── */
+    .log-btn-wrap { margin: 14px 16px 0; }
+    .log-btn { width: 100%; padding: 14px; background: rgba(255,204,0,0.12); border: 1px solid rgba(255,204,0,0.3); color: var(--gold); font-size: 15px; font-weight: 700; border-radius: 14px; cursor: pointer; }
 
-    /* ── PERMISSION SCREEN ───────────────────────────────── */
-    #permission {
-      align-items: center; justify-content: center;
-      padding: 40px 32px;
-      text-align: center; gap: 20px;
-    }
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: flex-end; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #111d12; border-radius: 24px 24px 0 0; padding: 24px 24px calc(env(safe-area-inset-bottom) + 24px); width: 100%; max-width: 500px; }
+    .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .modal .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .chip-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .chip { flex: 1; min-width: 80px; padding: 10px 6px; text-align: center; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .chip.selected { border-color: var(--green); background: rgba(51,204,102,0.18); color: var(--green); }
+    .chip.selected-bad { border-color: var(--orange); background: rgba(255,149,0,0.15); color: var(--orange); }
+    .modal-section-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+
+    /* ── PRACTICE SCREEN ── */
+    #practice { padding: calc(env(safe-area-inset-top) + 14px) 0 0; }
+    .practice-header { padding: 0 20px 16px; }
+    .practice-header h2 { font-size: 1.2rem; font-weight: 700; }
+    .practice-header p { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .practice-step { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+    .step-card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 18px; }
+    .step-card h4 { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+    .step-card p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .guess-section { margin-top: 14px; }
+    .guess-section .section-label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .reveal-box { background: rgba(51,204,102,0.08); border: 1px solid rgba(51,204,102,0.2); border-radius: 14px; padding: 16px; margin-top: 14px; }
+    .reveal-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .reveal-row:last-child { margin-bottom: 0; }
+    .reveal-label { font-size: 12px; color: var(--muted); }
+    .reveal-compare { display: flex; gap: 12px; align-items: center; }
+    .reveal-yours { font-size: 14px; color: var(--muted); }
+    .reveal-app   { font-size: 14px; font-weight: 700; color: var(--green); }
+    .reveal-diff  { font-size: 12px; padding: 2px 8px; border-radius: 8px; font-weight: 700; }
+    .diff-good { background: rgba(51,204,102,0.2); color: var(--green); }
+    .diff-off  { background: rgba(255,149,0,0.2);  color: var(--orange); }
+    .diff-bad  { background: rgba(255,59,48,0.2);  color: var(--red); }
+    .sensor-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
+
+    /* ── STATS SCREEN ── */
+    #stats { padding: calc(env(safe-area-inset-top) + 14px) 0 0; }
+    .stats-header { padding: 0 20px 14px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .stats-header h2 { font-size: 1.2rem; font-weight: 700; }
+    .stats-header .clear-btn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px; }
+    .stat-tile { background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 16px; }
+    .stat-tile .tile-val { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-tile .tile-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-tile .tile-sub { font-size: 11px; margin-top: 6px; font-weight: 600; }
+    .bias-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; margin: 10px 0 4px; overflow: hidden; position: relative; }
+    .bias-bar { height: 100%; border-radius: 4px; position: absolute; }
+    .bias-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 16px 8px; }
+    .history-list { margin: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+    .history-item { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+    .history-left .h-dist { font-size: 14px; font-weight: 700; }
+    .history-left .h-break { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .history-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .result-pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+    .pill-perfect { background: rgba(51,204,102,0.2); color: var(--green); }
+    .pill-off     { background: rgba(255,149,0,0.2);  color: var(--orange); }
+    .pill-bad     { background: rgba(255,59,48,0.2);  color: var(--red); }
+    .empty-state { text-align: center; padding: 48px 32px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+    /* ── PERMISSION SCREEN ── */
+    #permission { align-items: center; justify-content: center; padding: 40px 32px; text-align: center; gap: 20px; min-height: 100%; }
     #permission h2 { font-size: 1.5rem; font-weight: 700; }
     #permission p { color: var(--muted); font-size: 14px; line-height: 1.6; }
-    #permission .icon { font-size: 64px; }
+    .big-icon { font-size: 64px; }
+
+    /* ── CANVAS ── */
+    .canvas-wrap { margin: 10px 16px 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+    #greenCanvas { display: block; width: 100%; }
+
+    .recal-btn { display: block; margin: 14px auto 0; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
+    .divider { height: 1px; background: var(--border); margin: 14px 0; }
   </style>
 </head>
 <body>
+<div class="app">
+  <div class="screen-area">
 
-<!-- ── SETUP SCREEN ─────────────────────────────────────── -->
-<div id="setup" class="screen active">
-  <div style="text-align:center">
-    <h1>Green Reader</h1>
-    <div class="subtitle">How to read a putt</div>
-  </div>
-
-  <div style="display:flex;flex-direction:column;align-items:center">
-    <div class="diagram">
-      <div class="diagram-hole">
-        <div class="hole-circle"></div>
-        <div class="diagram-label">HOLE</div>
+    <!-- ── SETUP ── -->
+    <div id="setup" class="screen active" style="min-height:100dvh;padding:calc(env(safe-area-inset-top)+32px) 28px 28px;align-items:center;justify-content:space-between;">
+      <div style="text-align:center">
+        <h1>Green Reader</h1>
+        <div class="subtitle" style="color:var(--green);font-size:1.05rem;font-weight:600;margin-top:4px;">How to read a putt</div>
       </div>
-      <div class="diagram-phone">
-        <div class="top-label">TOP</div>
-        <div class="arrow">↑</div>
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="diagram">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="hole-circle"></div><div class="diagram-label">HOLE</div></div>
+          <div class="diagram-phone"><div class="top-label">TOP</div><div class="arrow">↑</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="diagram-label">BALL</div><div class="ball-circle"></div></div>
+        </div>
+        <div class="caption-badge">Point TOP of phone toward hole</div>
       </div>
-      <div class="diagram-ball">
-        <div class="diagram-label">BALL</div>
-        <div class="ball-circle"></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><p>Stand behind your ball, facing the hole</p></div>
+        <div class="step"><div class="step-num">2</div><p>Lay phone flat on the green between ball and hole</p></div>
+        <div class="step"><div class="step-num">3</div><p>Point the <strong>TOP</strong> of the phone toward the hole</p></div>
+        <div class="step"><div class="step-num">4</div><p>Tap Calibrate to zero any tilt</p></div>
+      </div>
+      <div style="width:100%">
+        <button class="btn btn-primary" onclick="startApp()">Calibrate &amp; Start</button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="skipCalibration()">Skip Calibration</button>
       </div>
     </div>
-    <div class="caption-badge">Point TOP of phone toward hole</div>
-  </div>
 
-  <div class="steps">
-    <div class="step"><div class="step-num">1</div><p>Stand behind your ball, facing the hole</p></div>
-    <div class="step"><div class="step-num">2</div><p>Lay your phone flat on the green between ball and hole</p></div>
-    <div class="step"><div class="step-num">3</div><p>Point the <strong>TOP</strong> of the phone toward the hole</p></div>
-    <div class="step"><div class="step-num">4</div><p>Tap Calibrate to zero any case or surface tilt</p></div>
-  </div>
+    <!-- ── PERMISSION ── -->
+    <div id="permission" class="screen">
+      <div class="big-icon">📱</div>
+      <h2>Motion Access Needed</h2>
+      <p>Green Reader needs your phone's motion sensors to measure slope.</p>
+      <button class="btn btn-primary" style="max-width:280px" onclick="requestPermission()">Allow Motion Access</button>
+      <p style="font-size:12px">iOS requires a tap to grant this.</p>
+    </div>
 
-  <div style="width:100%">
-    <button class="btn-primary" onclick="startApp()">Calibrate &amp; Start Reading</button>
-    <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="skipCalibration()">Skip Calibration</button>
-  </div>
+    <!-- ── READ ── -->
+    <div id="read" class="screen">
+      <div class="topbar">
+        <div>
+          <h2>Green Reader</h2>
+          <div class="cal-badge ok" id="calBadge">Calibrated</div>
+        </div>
+        <div class="live-dot"><span></span> Live</div>
+      </div>
+
+      <div class="orientation-banner">↑&nbsp; Top of phone pointing toward hole</div>
+
+      <div class="canvas-wrap">
+        <canvas id="greenCanvas" height="280"></canvas>
+      </div>
+
+      <!-- Break summary -->
+      <div class="card break-card">
+        <div>
+          <div id="breakAmount" class="break-amount" style="color:var(--green)">0.0"</div>
+          <div id="breakDir" class="break-dir"></div>
+          <div id="straightLabel" style="display:none;font-size:1.1rem;font-weight:700">Straight putt</div>
+          <div id="sevBadge" class="severity-badge">Flat</div>
+        </div>
+        <div class="break-right">
+          <div class="clock-sub">Aim Point</div>
+          <div id="clockLabel" class="clock-label">12 o'clock</div>
+          <div id="updownBadge" style="display:none" class="updown-badge"></div>
+          <div class="pace-row" style="border:none;padding:0;margin-top:8px">
+            <span class="pace-label-text" style="margin-right:6px">Pace:</span>
+            <span class="pace-value" id="paceLabel">10 ft</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distance slider -->
+      <div class="card slider-card">
+        <label>Putt Distance <span id="distLabel">10 ft</span></label>
+        <input type="range" id="distSlider" min="1" max="60" value="10" step="1" oninput="onDistChange(this.value)" />
+      </div>
+
+      <!-- Metrics -->
+      <div class="card metrics">
+        <div class="metric"><div class="val" id="mSlope">0.0°</div><div class="lbl">Slope</div></div>
+        <div class="metric-divider"></div>
+        <div class="metric"><div class="val" id="mGrade">0.0%</div><div class="lbl">Grade</div></div>
+        <div class="metric-divider"></div>
+        <div class="metric"><div class="val" id="mLateral">0.0°</div><div class="lbl">Lateral</div></div>
+      </div>
+
+      <!-- Log putt -->
+      <div class="log-btn-wrap">
+        <button class="log-btn" onclick="openLogModal()">📋 Log this putt result</button>
+      </div>
+
+      <button class="recal-btn" onclick="showSetup()">↺ Recalibrate</button>
+    </div>
+
+    <!-- ── PRACTICE ── -->
+    <div id="practice" class="screen">
+      <div style="padding:calc(env(safe-area-inset-top)+14px) 20px 10px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h2 style="font-size:1.2rem;font-weight:700">Blind Read</h2>
+          <p style="font-size:13px;color:var(--muted);margin-top:3px">Train your eye — guess first, then reveal</p>
+        </div>
+        <div class="live-dot"><span></span> Live</div>
+      </div>
+
+      <!-- Step 1: Your guess -->
+      <div id="practiceStep1" class="practice-step">
+        <div class="step-card">
+          <h4>STEP 1 — Place phone, then make your read</h4>
+          <p>Lay the phone on the green (top toward hole). Look at the putt with your eyes first. Then enter your guess below — don't peek at the Read tab!</p>
+
+          <div class="guess-section">
+            <div class="section-label">Your distance</div>
+            <div class="card slider-card" style="margin:0;border:none;padding:0;background:none">
+              <label>Putt Distance <span id="blindDistLabel">10 ft</span></label>
+              <input type="range" id="blindDistSlider" min="1" max="60" value="10" step="1" oninput="onBlindDistChange(this.value)" />
+            </div>
+          </div>
+
+          <div class="guess-section">
+            <div class="section-label">Your break direction</div>
+            <div class="chip-row">
+              <div class="chip" id="gLeft"  onclick="selectGuess('dir','left',this)">◀ Left</div>
+              <div class="chip" id="gStraight" onclick="selectGuess('dir','straight',this)">Straight</div>
+              <div class="chip" id="gRight" onclick="selectGuess('dir','right',this)">Right ▶</div>
+            </div>
+          </div>
+
+          <div class="guess-section" id="amountSection" style="display:none">
+            <div class="section-label">How much break?</div>
+            <div class="chip-row">
+              <div class="chip" onclick="selectGuess('amount','slight',this)">Slight<br><small style="color:var(--muted)">~1"</small></div>
+              <div class="chip" onclick="selectGuess('amount','moderate',this)">Moderate<br><small style="color:var(--muted)">~4"</small></div>
+              <div class="chip" onclick="selectGuess('amount','big',this)">Big<br><small style="color:var(--muted)">~9"</small></div>
+              <div class="chip" onclick="selectGuess('amount','huge',this)">Huge<br><small style="color:var(--muted)">~18"</small></div>
+            </div>
+          </div>
+
+          <div class="guess-section">
+            <div class="section-label">Uphill or downhill?</div>
+            <div class="chip-row">
+              <div class="chip" onclick="selectGuess('slope','uphill',this)">↑ Uphill</div>
+              <div class="chip" onclick="selectGuess('slope','flat',this)">Flat</div>
+              <div class="chip" onclick="selectGuess('slope','downhill',this)">↓ Downhill</div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="margin-top:18px" onclick="revealRead()">Reveal App's Read →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Reveal -->
+      <div id="practiceStep2" class="practice-step" style="display:none">
+        <div class="step-card">
+          <h4>STEP 2 — Compare your read to the sensors</h4>
+          <p>Now make your putt using the app's aim point.</p>
+          <div class="reveal-box" id="revealBox"></div>
+        </div>
+
+        <div class="step-card">
+          <h4>STEP 3 — How did it go?</h4>
+          <p style="margin-bottom:14px">Tap your result after the ball stops.</p>
+          <div class="modal-section-label">Break</div>
+          <div class="chip-row" id="resultBreakChips">
+            <div class="chip" onclick="selectResult('break','less',this)">Less break</div>
+            <div class="chip" onclick="selectResult('break','perfect',this)">Perfect ✓</div>
+            <div class="chip" onclick="selectResult('break','more',this)">More break</div>
+          </div>
+          <div class="modal-section-label" style="margin-top:12px">Pace</div>
+          <div class="chip-row" id="resultPaceChips">
+            <div class="chip" onclick="selectResult('pace','short',this)">Short</div>
+            <div class="chip" onclick="selectResult('pace','perfect',this)">Perfect ✓</div>
+            <div class="chip" onclick="selectResult('pace','long',this)">Long</div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:18px" onclick="savePracticeResult()">Save &amp; Next Putt</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STATS ── -->
+    <div id="stats" class="screen">
+      <div class="stats-header">
+        <div>
+          <h2>Your Tendencies</h2>
+          <p style="font-size:13px;color:var(--muted);margin-top:3px" id="statsSubtitle">No putts logged yet</p>
+        </div>
+        <button class="clear-btn" onclick="confirmClear()">Clear all</button>
+      </div>
+
+      <div id="statsEmpty" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p>Log putts from the <strong>Read</strong> or <strong>Practice</strong> tabs and your tendencies will appear here.</p>
+      </div>
+
+      <div id="statsContent" style="display:none">
+        <!-- Stat tiles -->
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <div class="tile-val" id="statTotal">0</div>
+            <div class="tile-lbl">Putts Logged</div>
+          </div>
+          <div class="stat-tile">
+            <div class="tile-val" id="statAccuracy" style="color:var(--green)">–</div>
+            <div class="tile-lbl">Break Accuracy</div>
+            <div class="tile-sub" id="statStreak" style="color:var(--muted)"></div>
+          </div>
+          <div class="stat-tile" style="grid-column:span 2">
+            <div class="tile-lbl" style="margin-bottom:8px">Break Bias</div>
+            <div class="bias-bar-wrap">
+              <div class="bias-bar" id="biasFill"></div>
+            </div>
+            <div class="bias-labels"><span>Under-reads</span><span>Over-reads</span></div>
+            <div id="biasText" class="tile-sub" style="text-align:center;margin-top:8px;color:var(--muted)"></div>
+          </div>
+        </div>
+
+        <!-- Pace -->
+        <div class="section-title">Pace Tendency</div>
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="stat-tile" style="text-align:center">
+            <div class="tile-val" id="pShort" style="color:var(--blue)">–</div>
+            <div class="tile-lbl">Short</div>
+          </div>
+          <div class="stat-tile" style="text-align:center">
+            <div class="tile-val" id="pGood" style="color:var(--green)">–</div>
+            <div class="tile-lbl">Perfect</div>
+          </div>
+          <div class="stat-tile" style="text-align:center">
+            <div class="tile-val" id="pLong" style="color:var(--orange)">–</div>
+            <div class="tile-lbl">Long</div>
+          </div>
+        </div>
+
+        <!-- Direction breakdown -->
+        <div class="section-title">By Break Direction</div>
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <div class="tile-val" id="statLR" style="color:var(--green)">–</div>
+            <div class="tile-lbl">Left-to-Right</div>
+            <div class="tile-sub" id="statLRsub" style="color:var(--muted)"></div>
+          </div>
+          <div class="stat-tile">
+            <div class="tile-val" id="statRL" style="color:var(--green)">–</div>
+            <div class="tile-lbl">Right-to-Left</div>
+            <div class="tile-sub" id="statRLsub" style="color:var(--muted)"></div>
+          </div>
+        </div>
+
+        <!-- Recent history -->
+        <div class="section-title">Recent Putts</div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+
+  </div><!-- end screen-area -->
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="bottom-nav" id="mainNav" style="display:none">
+    <button class="nav-btn active" id="navRead" onclick="switchTab('read')">
+      <span class="nav-icon">🎯</span>
+      <span class="nav-label">Read</span>
+    </button>
+    <button class="nav-btn" id="navPractice" onclick="switchTab('practice')">
+      <span class="nav-icon">🏋️</span>
+      <span class="nav-label">Practice</span>
+    </button>
+    <button class="nav-btn" id="navStats" onclick="switchTab('stats')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Stats</span>
+    </button>
+  </nav>
 </div>
 
-<!-- ── PERMISSION SCREEN ────────────────────────────────── -->
-<div id="permission" class="screen">
-  <div class="icon">📱</div>
-  <h2>Motion Access Needed</h2>
-  <p>Green Reader needs access to your phone's motion sensors to measure the green's slope.</p>
-  <button class="btn-primary" style="max-width:280px" onclick="requestPermission()">Allow Motion Access</button>
-  <p style="font-size:12px">iOS requires you to tap to grant this permission.</p>
-</div>
-
-<!-- ── READING SCREEN ────────────────────────────────────── -->
-<div id="reading" class="screen">
-  <div class="topbar">
-    <div>
-      <h2>Green Reader</h2>
-      <div class="calibrated-badge ok" id="calBadge">Calibrated</div>
+<!-- ── LOG MODAL (from Read tab) ── -->
+<div class="modal-overlay" id="logModal" onclick="closeLogIfBg(event)">
+  <div class="modal">
+    <h3>Log Putt Result</h3>
+    <p class="modal-sub">How did it come out? Tap to record.</p>
+    <div class="modal-section-label">Break</div>
+    <div class="chip-row" id="logBreakChips">
+      <div class="chip" onclick="selectLog('break','less',this)">Less break</div>
+      <div class="chip" onclick="selectLog('break','perfect',this)">Perfect ✓</div>
+      <div class="chip" onclick="selectLog('break','more',this)">More break</div>
     </div>
-    <div class="live-dot"><span></span> Live</div>
-  </div>
-
-  <div class="orientation-banner">
-    <span class="icon">↑</span>
-    Top of phone pointing toward hole
-  </div>
-
-  <div class="diagram-canvas-wrap">
-    <canvas id="greenCanvas" height="300"></canvas>
-  </div>
-
-  <div class="card break-card">
-    <div class="break-left">
-      <div id="breakAmount" class="break-amount" style="color:var(--green)">0.0"</div>
-      <div id="breakDir" class="break-dir"></div>
-      <div id="straightLabel" class="straight-label" style="display:none">Straight putt</div>
-      <div id="sevBadge" class="severity-badge">Flat</div>
+    <div class="modal-section-label" style="margin-top:12px">Pace</div>
+    <div class="chip-row" id="logPaceChips">
+      <div class="chip" onclick="selectLog('pace','short',this)">Short</div>
+      <div class="chip" onclick="selectLog('pace','perfect',this)">Perfect ✓</div>
+      <div class="chip" onclick="selectLog('pace','long',this)">Long</div>
     </div>
-    <div class="break-right">
-      <div class="clock-sub">Aim Point</div>
-      <div id="clockLabel" class="clock-label">12 o'clock</div>
-      <div id="updownBadge" style="display:none" class="updown-badge"></div>
-    </div>
+    <button class="btn btn-primary" style="margin-top:20px" onclick="saveLogResult()">Save</button>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="closeLogModal()">Cancel</button>
   </div>
-  <div class="pace-row">
-    <span class="pace-label">Pace — hit it like a</span>
-    <span class="pace-value" id="paceLabel">10 ft putt</span>
-  </div>
-
-  <div class="card slider-card">
-    <label>Putt Distance <span id="distLabel">10 ft</span></label>
-    <input type="range" id="distSlider" min="1" max="60" value="10" step="1" oninput="onDistChange(this.value)" />
-  </div>
-
-  <div class="card metrics">
-    <div class="metric">
-      <div class="val" id="mSlope">0.0°</div>
-      <div class="lbl">Slope</div>
-    </div>
-    <div class="metric-divider"></div>
-    <div class="metric">
-      <div class="val" id="mGrade">0.0%</div>
-      <div class="lbl">Grade</div>
-    </div>
-    <div class="metric-divider"></div>
-    <div class="metric">
-      <div class="val" id="mLateral">0.0°</div>
-      <div class="lbl">Lateral</div>
-    </div>
-  </div>
-
-  <button class="recal-btn" onclick="showSetup()">↺ Recalibrate</button>
 </div>
 
 <script>
-// ── State ────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────────────
 let calibrationBeta  = 0;
 let calibrationGamma = 0;
 let isCalibrated     = false;
-let puttDistance     = 10;   // feet
-let lastReading      = { angle: 0, lateral: 0, longitudinal: 0 };
+let puttDistance     = 10;
+let lastReading      = { beta:0, gamma:0, angle:0, lateral:0, longitudinal:0 };
 let canvas, ctx;
-let animFrame;
+let currentTab = 'read';
 
-// ── Screen helpers ───────────────────────────────────────
+// Log state
+let logSelection = { break: null, pace: null };
+
+// Practice state
+let practiceGuess   = { dir: null, amount: null, slope: null };
+let practiceResult  = { break: null, pace: null };
+let blindDist       = 10;
+let practiceReading = null; // snapshot at reveal time
+
+// ────────────────────────────────────────────────────────
+// DATA LAYER (localStorage)
+// ────────────────────────────────────────────────────────
+function loadPutts() {
+  try { return JSON.parse(localStorage.getItem('gr_putts') || '[]'); } catch { return []; }
+}
+function savePutts(putts) {
+  localStorage.setItem('gr_putts', JSON.stringify(putts));
+}
+function addPutt(putt) {
+  const putts = loadPutts();
+  putts.unshift({ ...putt, id: Date.now(), date: new Date().toLocaleDateString() });
+  savePutts(putts);
+}
+
+// ────────────────────────────────────────────────────────
+// NAV & SCREENS
+// ────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-function showSetup()       { showScreen('setup'); }
-function showPermission()  { showScreen('permission'); }
-function showReading()     { showScreen('reading'); }
+function showSetup() { showScreen('setup'); document.getElementById('mainNav').style.display = 'none'; }
 
-// ── Entry points ─────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  showScreen(tab);
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  if (tab === 'stats') renderStats();
+  if (tab === 'practice') resetPractice();
+}
+
+// ────────────────────────────────────────────────────────
+// ENTRY POINTS
+// ────────────────────────────────────────────────────────
 async function startApp() {
   const ok = await ensurePermission();
   if (!ok) return;
   calibrate();
-  showReading();
+  launchMain();
 }
-
 function skipCalibration() {
-  ensurePermission().then(ok => { if (ok) showReading(); });
+  ensurePermission().then(ok => { if (ok) launchMain(); });
+}
+function launchMain() {
+  document.getElementById('mainNav').style.display = 'flex';
+  switchTab('read');
 }
 
-// ── Motion permission (iOS 13+) ──────────────────────────
+// ────────────────────────────────────────────────────────
+// MOTION PERMISSION
+// ────────────────────────────────────────────────────────
 async function ensurePermission() {
-  if (typeof DeviceOrientationEvent === 'undefined') {
-    alert('Motion sensors not available on this device/browser.');
-    return false;
-  }
+  if (typeof DeviceOrientationEvent === 'undefined') { alert('Motion sensors not available.'); return false; }
   if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-    // iOS 13+ requires explicit permission
     try {
-      const result = await DeviceOrientationEvent.requestPermission();
-      if (result !== 'granted') {
-        showPermission();
-        return false;
-      }
-    } catch(e) {
-      // requestPermission must be called from a user gesture
-      showPermission();
-      return false;
-    }
+      const r = await DeviceOrientationEvent.requestPermission();
+      if (r !== 'granted') { showScreen('permission'); return false; }
+    } catch { showScreen('permission'); return false; }
   }
   window.addEventListener('deviceorientation', onOrientation, true);
   return true;
 }
-
 async function requestPermission() {
   const ok = await ensurePermission();
-  if (ok) { calibrate(); showReading(); }
+  if (ok) { calibrate(); launchMain(); }
 }
 
-// ── Calibration ──────────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// CALIBRATION
+// ────────────────────────────────────────────────────────
 function calibrate() {
   calibrationBeta  = lastReading.beta  || 0;
   calibrationGamma = lastReading.gamma || 0;
   isCalibrated = true;
-  document.getElementById('calBadge').textContent = 'Calibrated';
-  document.getElementById('calBadge').className = 'calibrated-badge ok';
+  const badge = document.getElementById('calBadge');
+  if (badge) { badge.textContent = 'Calibrated'; badge.className = 'cal-badge ok'; }
 }
 
-// ── Motion handler ───────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// MOTION
+// ────────────────────────────────────────────────────────
 function onOrientation(e) {
-  // beta:  front-back tilt. Flat phone ≈ 0. Negative = top tilts toward ground (uphill putt)
-  // gamma: left-right tilt. Flat phone ≈ 0. Positive = right side down (breaks right)
   const rawBeta  = e.beta  ?? 0;
   const rawGamma = e.gamma ?? 0;
-
   const beta  = rawBeta  - calibrationBeta;
   const gamma = rawGamma - calibrationGamma;
-
-  // When phone is flat: beta is longitudinal (pitch), gamma is lateral (roll)
-  const lateralDeg      = gamma;         // positive = right side lower = breaks right
-  const longitudinalDeg = beta;           // positive = top higher = uphill toward hole
-
+  const lateralDeg      = gamma;
+  const longitudinalDeg = beta;
   const angle = Math.sqrt(lateralDeg**2 + longitudinalDeg**2);
-
   lastReading = { beta: rawBeta, gamma: rawGamma, angle, lateral: lateralDeg, longitudinal: longitudinalDeg };
-  updateUI(lastReading);
+  if (currentTab === 'read' || currentTab === 'practice') updateUI(lastReading);
 }
 
-// ── Break calculation ────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// CALCULATIONS
+// ────────────────────────────────────────────────────────
 function calcBreak(lateral, longitudinal, distFeet) {
   const lateralPct = Math.tan(lateral * Math.PI / 180) * 100;
-  const breakInches = lateralPct * distFeet * 0.9;
-  return breakInches;
+  return lateralPct * distFeet * 0.9;
 }
 
-// Effective pace distance:
-// Rule of thumb: every 1ft of elevation change = ~3ft of pace adjustment.
-// Elevation change = distance × grade (as decimal).
-// Uphill = hit it harder (bigger effective dist), downhill = softer (smaller).
 function calcEffectiveDistance(longitudinal, distFeet) {
-  const grade = Math.tan(longitudinal * Math.PI / 180); // as decimal (e.g. 0.05 = 5%)
-  const elevationChange = distFeet * grade;             // feet of rise/fall
-  const adjustment = elevationChange * 3;               // pace adjustment in feet
-  const effective = Math.max(1, Math.round(distFeet + adjustment));
-  return effective;
+  const grade = Math.tan(longitudinal * Math.PI / 180);
+  const elevChange = distFeet * grade;
+  return Math.max(1, Math.round(distFeet + elevChange * 3));
 }
 
 function clockPosition(breakInches) {
   if (Math.abs(breakInches) < 0.5) return '12 o\'clock';
   const cups   = Math.abs(breakInches) / 4.25;
   const offset = Math.min(Math.round(cups), 5);
-  if (breakInches > 0) {
-    // breaks right → aim left → counter-clockwise
-    const hour = ((12 - offset) + 12) % 12;
-    return `${hour === 0 ? 12 : hour} o'clock`;
-  } else {
-    // breaks left → aim right → clockwise
-    const hour = offset % 12;
-    return `${hour === 0 ? 12 : hour} o'clock`;
-  }
+  if (breakInches > 0) { const h = ((12 - offset) + 12) % 12; return `${h === 0 ? 12 : h} o'clock`; }
+  else                 { const h = offset % 12;                return `${h === 0 ? 12 : h} o'clock`; }
 }
 
 function severity(inches) {
   const a = Math.abs(inches);
-  if (a < 1)  return { label: 'Flat',        color: '#33cc66', bg: 'rgba(51,204,102,0.18)' };
-  if (a < 4)  return { label: 'Mild',        color: '#88dd44', bg: 'rgba(136,221,68,0.18)' };
-  if (a < 9)  return { label: 'Moderate',    color: '#ffcc00', bg: 'rgba(255,204,0,0.18)'  };
-  if (a < 18) return { label: 'Significant', color: '#ff8800', bg: 'rgba(255,136,0,0.18)'  };
-  return              { label: 'Severe',     color: '#ff3333', bg: 'rgba(255,51,51,0.18)'   };
+  if (a < 1)  return { label:'Flat',        color:'#33cc66', bg:'rgba(51,204,102,0.18)' };
+  if (a < 4)  return { label:'Mild',        color:'#88dd44', bg:'rgba(136,221,68,0.18)' };
+  if (a < 9)  return { label:'Moderate',    color:'#ffcc00', bg:'rgba(255,204,0,0.18)'  };
+  if (a < 18) return { label:'Significant', color:'#ff8800', bg:'rgba(255,136,0,0.18)'  };
+  return              { label:'Severe',     color:'#ff3333', bg:'rgba(255,51,51,0.18)'   };
 }
 
-// ── UI update ────────────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// UI UPDATE
+// ────────────────────────────────────────────────────────
 function updateUI(r) {
-  const breakIn  = calcBreak(r.lateral, r.longitudinal, puttDistance);
+  const breakIn      = calcBreak(r.lateral, r.longitudinal, puttDistance);
   const effectiveDist = calcEffectiveDistance(r.longitudinal, puttDistance);
-  const absBreak = Math.abs(breakIn);
-  const sev      = severity(breakIn);
-  const clock    = clockPosition(breakIn);
-  const isFlat   = absBreak < 0.5;
-  const breakDir = breakIn > 0 ? 'Right' : 'Left';
-  const isUphill   = r.longitudinal > 0.5;
-  const isDownhill = r.longitudinal < -0.5;
+  const absBreak     = Math.abs(breakIn);
+  const sev          = severity(breakIn);
+  const clock        = clockPosition(breakIn);
+  const isFlat       = absBreak < 0.5;
+  const isUphill     = r.longitudinal > 0.5;
+  const isDownhill   = r.longitudinal < -0.5;
 
-  // Break amount
-  const amountEl = document.getElementById('breakAmount');
-  amountEl.textContent = absBreak.toFixed(1) + '"';
-  amountEl.style.color = sev.color;
-
-  document.getElementById('breakDir').textContent   = isFlat ? '' : breakDir;
+  document.getElementById('breakAmount').textContent = absBreak.toFixed(1) + '"';
+  document.getElementById('breakAmount').style.color = sev.color;
+  document.getElementById('breakDir').textContent    = isFlat ? '' : (breakIn > 0 ? 'Right' : 'Left');
+  document.getElementById('breakDir').style.display  = isFlat ? 'none' : 'block';
   document.getElementById('straightLabel').style.display = isFlat ? 'block' : 'none';
-  document.getElementById('breakDir').style.display      = isFlat ? 'none'  : 'block';
 
   const sevEl = document.getElementById('sevBadge');
-  sevEl.textContent   = sev.label;
-  sevEl.style.background = sev.bg;
-  sevEl.style.color      = sev.color;
+  sevEl.textContent = sev.label; sevEl.style.background = sev.bg; sevEl.style.color = sev.color;
 
   document.getElementById('clockLabel').textContent = clock;
-  document.getElementById('paceLabel').textContent = effectiveDist + ' ft putt';
+  document.getElementById('paceLabel').textContent  = effectiveDist + ' ft';
 
   const udEl = document.getElementById('updownBadge');
   if (isUphill || isDownhill) {
     udEl.style.display = 'inline-flex';
     udEl.textContent   = isUphill ? '↑ Uphill' : '↓ Downhill';
     udEl.className     = 'updown-badge ' + (isUphill ? 'uphill' : 'downhill');
-  } else {
-    udEl.style.display = 'none';
-  }
+  } else { udEl.style.display = 'none'; }
 
-  // Metrics
   document.getElementById('mSlope').textContent   = r.angle.toFixed(1) + '°';
   document.getElementById('mGrade').textContent   = (Math.tan(r.angle * Math.PI/180)*100).toFixed(1) + '%';
   document.getElementById('mLateral').textContent = Math.abs(r.lateral).toFixed(1) + '°';
 
-  // Canvas
   drawDiagram(breakIn, puttDistance, effectiveDist);
 }
 
@@ -519,139 +695,338 @@ function onDistChange(val) {
   document.getElementById('distLabel').textContent = val + ' ft';
   updateUI(lastReading);
 }
+function onBlindDistChange(val) {
+  blindDist = parseInt(val);
+  document.getElementById('blindDistLabel').textContent = val + ' ft';
+}
 
-// ── Canvas diagram ───────────────────────────────────────
+// ────────────────────────────────────────────────────────
+// CANVAS DIAGRAM
+// ────────────────────────────────────────────────────────
 function drawDiagram(breakInches, actualDist, effectiveDist) {
-  if (!canvas) {
-    canvas = document.getElementById('greenCanvas');
-    ctx    = canvas.getContext('2d');
-  }
+  if (!canvas) { canvas = document.getElementById('greenCanvas'); ctx = canvas.getContext('2d'); }
   const W = canvas.offsetWidth;
-  canvas.width  = W;
-  canvas.height = 300;
-  const H = 300;
+  canvas.width = W; canvas.height = 280;
+  const H = 280;
 
-  // Green background with lateral slope gradient hint
   const tilt = Math.max(-1, Math.min(1, breakInches / 20));
-  const grd  = ctx.createLinearGradient(W*(0.5-tilt*0.4), 0, W*(0.5+tilt*0.4), 0);
-  grd.addColorStop(0, '#0d3810');
-  grd.addColorStop(1, '#1a5c1a');
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, W, H);
+  const grd  = ctx.createLinearGradient(W*(0.5-tilt*0.4),0, W*(0.5+tilt*0.4),0);
+  grd.addColorStop(0,'#0d3810'); grd.addColorStop(1,'#1a5c1a');
+  ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
 
-  const ballX = W / 2;
-  const ballY = H * 0.82;
-  const cupX  = W / 2;
-  const cupY  = H * 0.16;
-  const span  = ballY - cupY;  // vertical pixels representing actualDist
+  const ballX = W/2, ballY = H*0.83, cupX = W/2, cupY = H*0.15;
+  const span  = ballY - cupY;
 
-  // ── Phantom hole (aim target) ──────────────────────────
-  // Lateral: offset by break amount
   const maxBreak  = 30;
   const clamped   = Math.max(-maxBreak, Math.min(maxBreak, breakInches));
   const lateralPx = (clamped / maxBreak) * (W * 0.28);
-
-  // Vertical: scale by effectiveDist / actualDist
-  // effectiveDist > actualDist → phantom hole is further away (higher on screen, smaller Y)
-  const distRatio  = (actualDist > 0) ? (effectiveDist / actualDist) : 1;
-  const phantomY   = ballY - span * distRatio;
-  // Clamp so it stays within the canvas with a margin
-  const aimY = Math.max(12, Math.min(ballY - 20, phantomY));
+  const distRatio = actualDist > 0 ? effectiveDist / actualDist : 1;
+  const aimY = Math.max(14, Math.min(ballY - 24, ballY - span * distRatio));
   const aimX = cupX + lateralPx;
 
-  // ── Ball path curve (dashed white) ────────────────────
-  // Curves from ball → actual hole, controlled by lateral break
-  const midX = (ballX + cupX) / 2 + lateralPx;
-  const midY = (ballY + cupY) / 2;
-  ctx.beginPath();
-  ctx.moveTo(ballX, ballY);
-  ctx.quadraticCurveTo(midX, midY, cupX, cupY);
-  ctx.setLineDash([6, 5]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-  ctx.lineWidth   = 2;
-  ctx.lineCap     = 'round';
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Ball path (white dashed curve → hole)
+  const midX = (ballX+cupX)/2 + lateralPx, midY = (ballY+cupY)/2;
+  ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
+  ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke(); ctx.setLineDash([]);
 
-  // ── Aim line: ball → phantom hole (solid yellow) ──────
-  ctx.beginPath();
-  ctx.moveTo(ballX, ballY);
-  ctx.lineTo(aimX, aimY);
-  ctx.setLineDash([4, 6]);
-  ctx.strokeStyle = 'rgba(255,204,0,0.8)';
-  ctx.lineWidth   = 2;
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Aim line (gold → phantom hole)
+  ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.lineTo(aimX,aimY);
+  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,204,0,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
-  // ── Phantom hole dot (gold, larger) ───────────────────
-  // Outer glow
-  ctx.beginPath();
-  ctx.arc(aimX, aimY, 13, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,204,0,0.15)';
-  ctx.fill();
-  // Inner dot
-  ctx.beginPath();
-  ctx.arc(aimX, aimY, 8, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,204,0,0.95)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  // Phantom hole glow + dot
+  ctx.beginPath(); ctx.arc(aimX,aimY,14,0,Math.PI*2); ctx.fillStyle='rgba(255,204,0,0.12)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(aimX,aimY,8,0,Math.PI*2);  ctx.fillStyle='rgba(255,204,0,0.95)'; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
 
   // AIM label
-  ctx.fillStyle = 'rgba(255,204,0,0.95)';
-  ctx.font = 'bold 10px -apple-system, sans-serif';
+  ctx.fillStyle='rgba(255,204,0,0.95)'; ctx.font='bold 10px -apple-system,sans-serif';
   ctx.textAlign = lateralPx >= 0 ? 'left' : 'right';
-  const labelOffX = lateralPx >= 0 ? 14 : -14;
-  ctx.fillText('AIM HERE', aimX + labelOffX, aimY + 4);
+  ctx.fillText('AIM HERE', aimX + (lateralPx >= 0 ? 14 : -14), aimY + 4);
 
-  // ── Actual cup ────────────────────────────────────────
-  ctx.beginPath();
-  ctx.arc(cupX, cupY, 9, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.85)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  // Cup (dimmed — not where you aim)
+  ctx.beginPath(); ctx.arc(cupX,cupY,8,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('HOLE', cupX, cupY-14);
 
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.font = 'bold 9px -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('HOLE', cupX, cupY - 16);
+  // Ball
+  ctx.beginPath(); ctx.arc(ballX,ballY,9,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('BALL', ballX, ballY+21);
 
-  // ── Ball ──────────────────────────────────────────────
-  ctx.beginPath();
-  ctx.arc(ballX, ballY, 9, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = 'bold 9px -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('BALL', ballX, ballY + 22);
-
-  // ── Orientation hint ──────────────────────────────────
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.font = '9px -apple-system, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('↑ top of phone', 10, 14);
+  // Orientation hint
+  ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='left';
+  ctx.fillText('↑ top of phone', 10, 13);
 }
 
-// ── Service Worker (offline support) ────────────────────
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+// ────────────────────────────────────────────────────────
+// LOG MODAL (from Read tab)
+// ────────────────────────────────────────────────────────
+function openLogModal() {
+  logSelection = { break: null, pace: null };
+  document.querySelectorAll('#logBreakChips .chip, #logPaceChips .chip').forEach(c => c.classList.remove('selected','selected-bad'));
+  document.getElementById('logModal').classList.add('open');
+}
+function closeLogModal()  { document.getElementById('logModal').classList.remove('open'); }
+function closeLogIfBg(e)  { if (e.target.id === 'logModal') closeLogModal(); }
+
+function selectLog(type, val, el) {
+  logSelection[type] = val;
+  document.querySelectorAll(`#log${type.charAt(0).toUpperCase()+type.slice(1)}Chips .chip`).forEach(c => c.classList.remove('selected','selected-bad'));
+  el.classList.add(val === 'perfect' ? 'selected' : 'selected-bad');
 }
 
-// ── Init ─────────────────────────────────────────────────
-// Draw a static diagram on page load
-window.addEventListener('load', () => {
-  // Resize canvas when reading screen first shown
-  const observer = new MutationObserver(() => {
-    if (document.getElementById('reading').classList.contains('active')) {
-      drawDiagram(0, puttDistance, puttDistance);
-    }
+function saveLogResult() {
+  if (!logSelection.break || !logSelection.pace) { alert('Please select both break and pace results.'); return; }
+  const breakIn = calcBreak(lastReading.lateral, lastReading.longitudinal, puttDistance);
+  const effDist = calcEffectiveDistance(lastReading.longitudinal, puttDistance);
+  addPutt({
+    mode: 'live',
+    distance: puttDistance,
+    effectiveDist: effDist,
+    breakInches: breakIn,
+    breakDir: breakIn > 0 ? 'right' : breakIn < 0 ? 'left' : 'straight',
+    result: { break: logSelection.break, pace: logSelection.pace }
   });
-  observer.observe(document.getElementById('reading'), { attributes: true });
+  closeLogModal();
+  showToast('Putt logged ✓');
+}
+
+// ────────────────────────────────────────────────────────
+// PRACTICE / BLIND READ
+// ────────────────────────────────────────────────────────
+function resetPractice() {
+  practiceGuess  = { dir: null, amount: null, slope: null };
+  practiceResult = { break: null, pace: null };
+  blindDist      = puttDistance;
+  document.getElementById('blindDistSlider').value = puttDistance;
+  document.getElementById('blindDistLabel').textContent = puttDistance + ' ft';
+  document.querySelectorAll('#practiceStep1 .chip').forEach(c => c.classList.remove('selected','selected-bad'));
+  document.getElementById('amountSection').style.display = 'none';
+  document.querySelectorAll('#resultBreakChips .chip, #resultPaceChips .chip').forEach(c => c.classList.remove('selected','selected-bad'));
+  document.getElementById('practiceStep1').style.display = 'flex';
+  document.getElementById('practiceStep2').style.display = 'none';
+}
+
+function selectGuess(type, val, el) {
+  practiceGuess[type] = val;
+  // Deselect siblings
+  el.closest('.chip-row').querySelectorAll('.chip').forEach(c => c.classList.remove('selected','selected-bad'));
+  el.classList.add('selected');
+  if (type === 'dir') {
+    document.getElementById('amountSection').style.display = val === 'straight' ? 'none' : 'flex';
+    if (val === 'straight') practiceGuess.amount = 'straight';
+  }
+}
+
+function selectResult(type, val, el) {
+  practiceResult[type] = val;
+  el.closest('.chip-row').querySelectorAll('.chip').forEach(c => c.classList.remove('selected','selected-bad'));
+  el.classList.add(val === 'perfect' ? 'selected' : 'selected-bad');
+}
+
+function revealRead() {
+  if (!practiceGuess.dir) { alert('Please enter your break direction.'); return; }
+  if (practiceGuess.dir !== 'straight' && !practiceGuess.amount) { alert('Please estimate how much break.'); return; }
+  if (!practiceGuess.slope) { alert('Please select uphill, flat, or downhill.'); return; }
+
+  practiceReading = { ...lastReading };
+  const breakIn   = calcBreak(practiceReading.lateral, practiceReading.longitudinal, blindDist);
+  const effDist   = calcEffectiveDistance(practiceReading.longitudinal, blindDist);
+  const absBreak  = Math.abs(breakIn);
+  const appDir    = absBreak < 0.5 ? 'straight' : (breakIn > 0 ? 'right' : 'left');
+  const appSlope  = practiceReading.longitudinal > 0.5 ? 'uphill' : practiceReading.longitudinal < -0.5 ? 'downhill' : 'flat';
+
+  // Map guess amount to inches
+  const guessAmountMap = { straight:0, slight:1, moderate:4, big:9, huge:18 };
+  const guessInches = practiceGuess.dir === 'straight' ? 0 : guessAmountMap[practiceGuess.amount] || 0;
+
+  // Build reveal HTML
+  const dirMatch  = practiceGuess.dir   === appDir;
+  const slopeMatch= practiceGuess.slope === appSlope;
+  const breakDiff = Math.abs(guessInches - absBreak);
+  const breakClose = breakDiff < 2;
+
+  function diffBadge(good, text) { return `<span class="reveal-diff ${good?'diff-good':'diff-off'}">${text}</span>`; }
+
+  document.getElementById('revealBox').innerHTML = `
+    <div class="reveal-row">
+      <span class="reveal-label">Break Direction</span>
+      <div class="reveal-compare">
+        <span class="reveal-yours">You: <strong>${practiceGuess.dir}</strong></span>
+        <span class="reveal-app">App: ${appDir}</span>
+        ${diffBadge(dirMatch, dirMatch ? '✓ Match' : '✗ Miss')}
+      </div>
+    </div>
+    <div class="reveal-row">
+      <span class="reveal-label">Break Amount</span>
+      <div class="reveal-compare">
+        <span class="reveal-yours">You: ~${guessInches}"</span>
+        <span class="reveal-app">App: ${absBreak.toFixed(1)}"</span>
+        ${diffBadge(breakClose, breakClose ? `✓ Close` : `✗ Off ${breakDiff.toFixed(1)}"`)}
+      </div>
+    </div>
+    <div class="reveal-row">
+      <span class="reveal-label">Slope</span>
+      <div class="reveal-compare">
+        <span class="reveal-yours">You: ${practiceGuess.slope}</span>
+        <span class="reveal-app">App: ${appSlope}</span>
+        ${diffBadge(slopeMatch, slopeMatch ? '✓ Match' : '✗ Miss')}
+      </div>
+    </div>
+    <div class="reveal-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <span class="reveal-label">Aim:</span>
+      <span class="reveal-app">${clockPosition(breakIn)} — hit it like ${effDist} ft</span>
+    </div>
+  `;
+
+  document.getElementById('practiceStep1').style.display = 'none';
+  document.getElementById('practiceStep2').style.display = 'flex';
+}
+
+function savePracticeResult() {
+  if (!practiceResult.break || !practiceResult.pace) { alert('Please tap your break and pace result.'); return; }
+  const breakIn = calcBreak(practiceReading.lateral, practiceReading.longitudinal, blindDist);
+  const effDist = calcEffectiveDistance(practiceReading.longitudinal, blindDist);
+
+  // Scoring: did their guess match app direction?
+  const appDir = Math.abs(breakIn) < 0.5 ? 'straight' : (breakIn > 0 ? 'right' : 'left');
+  const guessAmountMap = { straight:0, slight:1, moderate:4, big:9, huge:18 };
+  const guessInches    = practiceGuess.dir === 'straight' ? 0 : (guessAmountMap[practiceGuess.amount] || 0);
+
+  addPutt({
+    mode: 'blind',
+    distance: blindDist,
+    effectiveDist: effDist,
+    breakInches: breakIn,
+    breakDir: appDir,
+    guess: {
+      dir: practiceGuess.dir,
+      amount: practiceGuess.amount,
+      slope: practiceGuess.slope,
+      inches: guessInches
+    },
+    result: { break: practiceResult.break, pace: practiceResult.pace }
+  });
+  resetPractice();
+  showToast('Saved ✓');
+}
+
+// ────────────────────────────────────────────────────────
+// STATS
+// ────────────────────────────────────────────────────────
+function renderStats() {
+  const putts = loadPutts();
+  const empty  = document.getElementById('statsEmpty');
+  const content= document.getElementById('statsContent');
+
+  if (putts.length === 0) { empty.style.display='flex'; content.style.display='none'; return; }
+  empty.style.display='none'; content.style.display='block';
+
+  document.getElementById('statsSubtitle').textContent = `${putts.length} putt${putts.length===1?'':'s'} logged`;
+  document.getElementById('statTotal').textContent = putts.length;
+
+  // Break accuracy (% perfect)
+  const withResult = putts.filter(p => p.result);
+  const perfect    = withResult.filter(p => p.result.break === 'perfect').length;
+  const accuracy   = withResult.length ? Math.round(perfect / withResult.length * 100) : null;
+  document.getElementById('statAccuracy').textContent = accuracy !== null ? accuracy + '%' : '–';
+
+  // Streak
+  let streak = 0;
+  for (const p of putts) { if (p.result?.break === 'perfect') streak++; else break; }
+  document.getElementById('statStreak').textContent = streak > 1 ? `🔥 ${streak} in a row` : '';
+
+  // Break bias: more = over-reads, less = under-reads
+  const more = withResult.filter(p => p.result.break === 'more').length;
+  const less = withResult.filter(p => p.result.break === 'less').length;
+  const total = more + less + perfect;
+  const biasPct = total ? 50 + ((more - less) / total) * 50 : 50;
+  const fill = document.getElementById('biasFill');
+  if (more > less) {
+    fill.style.cssText = `right:${100-biasPct}%;left:50%;background:var(--orange)`;
+    document.getElementById('biasText').textContent = `You tend to over-read break (${more} times)`;
+  } else if (less > more) {
+    fill.style.cssText = `left:${biasPct}%;right:50%;transform:scaleX(-1);background:var(--blue)`;
+    fill.style.left = `${100-biasPct}%`; fill.style.right = '50%';
+    fill.style.cssText = `left:${100-biasPct}%;right:50%;background:var(--blue)`;
+    document.getElementById('biasText').textContent = `You tend to under-read break (${less} times)`;
+  } else {
+    fill.style.cssText = 'display:none';
+    document.getElementById('biasText').textContent = 'No consistent bias — nice!';
+  }
+
+  // Pace
+  const short = withResult.filter(p => p.result.pace === 'short').length;
+  const long  = withResult.filter(p => p.result.pace === 'long').length;
+  const pgood = withResult.filter(p => p.result.pace === 'perfect').length;
+  const pct = n => withResult.length ? Math.round(n/withResult.length*100)+'%' : '–';
+  document.getElementById('pShort').textContent = pct(short);
+  document.getElementById('pGood').textContent  = pct(pgood);
+  document.getElementById('pLong').textContent  = pct(long);
+
+  // By direction
+  const rights = withResult.filter(p => p.breakDir === 'right');
+  const lefts  = withResult.filter(p => p.breakDir === 'left');
+  const dirAcc = (arr) => {
+    if (!arr.length) return { acc:'–', sub:'' };
+    const p = arr.filter(x => x.result.break==='perfect').length;
+    return { acc: Math.round(p/arr.length*100)+'%', sub: `${arr.length} putt${arr.length===1?'':'s'}` };
+  };
+  const lr = dirAcc(rights), rl = dirAcc(lefts);
+  document.getElementById('statLR').textContent    = lr.acc;
+  document.getElementById('statLRsub').textContent = lr.sub;
+  document.getElementById('statRL').textContent    = rl.acc;
+  document.getElementById('statRLsub').textContent = rl.sub;
+
+  // History
+  const history = document.getElementById('historyList');
+  history.innerHTML = putts.slice(0,10).map(p => {
+    const br = p.result?.break;
+    const pa = p.result?.pace;
+    const bClass = br==='perfect'?'pill-perfect':br?'pill-off':'';
+    const pClass = pa==='perfect'?'pill-perfect':pa?'pill-off':'';
+    const breakStr = Math.abs(p.breakInches) < 0.5 ? 'Straight' : `${Math.abs(p.breakInches).toFixed(1)}" ${p.breakDir}`;
+    return `<div class="history-item">
+      <div class="history-left">
+        <div class="h-dist">${p.distance} ft ${p.mode==='blind'?'<span style="font-size:11px;color:var(--muted)">(blind)</span>':''}
+        </div>
+        <div class="h-break">${breakStr}</div>
+      </div>
+      <div class="history-right">
+        ${br ? `<span class="result-pill ${bClass}">Break: ${br}</span>` : ''}
+        ${pa ? `<span class="result-pill ${pClass}">Pace: ${pa}</span>` : ''}
+        <span style="font-size:11px;color:var(--muted)">${p.date||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function confirmClear() {
+  if (confirm('Delete all logged putts?')) { localStorage.removeItem('gr_putts'); renderStats(); }
+}
+
+// ────────────────────────────────────────────────────────
+// TOAST
+// ────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-weight:700;font-size:14px;padding:10px 20px;border-radius:20px;z-index:999;pointer-events:none';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// ────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+window.addEventListener('load', () => {
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('read').classList.contains('active')) drawDiagram(0, puttDistance, puttDistance);
+  });
+  observer.observe(document.getElementById('read'), { attributes:true });
 });
 </script>
 </body>
