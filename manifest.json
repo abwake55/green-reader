@@ -2,7 +2,7 @@
   "name": "Green Reader",
   "short_name": "Green Reader",
   "description": "Read putt break using your phone's motion sensors",
-  "start_url": "/",
+  "start_url": "/green-reader/",
   "display": "standalone",
   "background_color": "#0a1a0c",
   "theme_color": "#0a1a0c",

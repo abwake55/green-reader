@@ -1,5 +1,9 @@
-const CACHE = 'green-reader-v1';
-const FILES = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'green-reader-v2';
+const FILES = [
+  '/green-reader/',
+  '/green-reader/index.html',
+  '/green-reader/manifest.json'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
