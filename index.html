@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Green Reader" />
+  <meta name="theme-color" content="#0a1a0c" />
+  <title>Green Reader</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --green:   #33cc66;
+      --bg:      #0a1a0c;
+      --card:    rgba(255,255,255,0.07);
+      --border:  rgba(255,255,255,0.10);
+      --text:    #ffffff;
+      --muted:   rgba(255,255,255,0.45);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── SCREENS ─────────────────────────────────────────── */
+    .screen { display: none; flex-direction: column; height: 100dvh; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+    .screen.active { display: flex; }
+
+    /* ── SETUP SCREEN ────────────────────────────────────── */
+    #setup {
+      align-items: center;
+      justify-content: space-between;
+      padding: 32px 28px calc(env(safe-area-inset-bottom) + 28px);
+    }
+    #setup h1 { font-size: 2rem; font-weight: 700; color: var(--text); }
+    #setup .subtitle { color: var(--green); font-size: 1.05rem; font-weight: 600; margin-top: 4px; }
+
+    .diagram {
+      position: relative;
+      width: 220px;
+      height: 280px;
+      background: rgba(16,42,18,0.9);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+    }
+    .diagram-hole {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .hole-circle {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #000; border: 2px solid #fff;
+    }
+    .diagram-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1px; }
+    .diagram-phone {
+      width: 54px; height: 96px;
+      background: rgba(20,20,30,0.95);
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .diagram-phone .top-label {
+      position: absolute; top: 6px;
+      font-size: 7px; font-weight: 900; color: var(--green); letter-spacing: 1px;
+    }
+    .diagram-phone .arrow { font-size: 26px; color: var(--green); }
+    .diagram-ball {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .ball-circle { width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+    .caption-badge {
+      background: rgba(51,204,102,0.15);
+      color: var(--green);
+      font-size: 11px; font-weight: 700;
+      padding: 5px 12px; border-radius: 20px;
+      margin-top: 8px;
+    }
+
+    .steps { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .step { display: flex; align-items: flex-start; gap: 12px; }
+    .step-num {
+      min-width: 26px; height: 26px; border-radius: 50%;
+      background: var(--green); color: #000;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step p { font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.4; padding-top: 3px; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 18px;
+      background: var(--green);
+      color: #000;
+      font-size: 16px; font-weight: 700;
+      border: none; border-radius: 14px;
+      cursor: pointer;
+    }
+    .btn-ghost {
+      background: none; border: none;
+      color: var(--muted); font-size: 14px;
+      cursor: pointer; padding: 8px;
+    }
+
+    /* ── READING SCREEN ──────────────────────────────────── */
+    #reading { overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom) + 20px); }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 8px;
+    }
+    .topbar h2 { font-size: 1.25rem; font-weight: 700; }
+    .calibrated-badge { font-size: 11px; font-weight: 600; }
+    .calibrated-badge.ok  { color: var(--green); }
+    .calibrated-badge.warn { color: #ff9500; }
+
+    .live-dot {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--green);
+    }
+    .live-dot span {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+
+    .orientation-banner {
+      margin: 0 16px 4px;
+      background: rgba(51,204,102,0.10);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
+    }
+    .orientation-banner .icon { font-size: 18px; }
+
+    /* diagram canvas */
+    .diagram-canvas-wrap {
+      margin: 0 16px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    #greenCanvas { display: block; width: 100%; }
+
+    /* cards */
+    .card {
+      margin: 12px 16px 0;
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 18px 20px;
+    }
+
+    .break-card { display: flex; align-items: center; justify-content: space-between; }
+    .break-left .break-amount {
+      font-size: 3rem; font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .break-left .break-dir { font-size: 1.3rem; font-weight: 700; }
+    .break-left .straight-label { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .severity-badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      margin-top: 6px;
+    }
+    .break-right { text-align: right; }
+    .clock-label { font-size: 1.1rem; font-weight: 700; }
+    .clock-sub { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .updown-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .updown-badge.uphill   { background: rgba(0,122,255,0.15); color: #4da6ff; }
+    .updown-badge.downhill { background: rgba(255,149,0,0.15);  color: #ff9500; }
+
+    /* slider */
+    .slider-card label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .slider-card label span { font-weight: 700; color: var(--text); }
+    input[type=range] {
+      width: 100%; accent-color: var(--green);
+      height: 4px; cursor: pointer;
+    }
+
+    /* metrics row */
+    .metrics { display: flex; align-items: center; }
+    .metric { flex: 1; text-align: center; }
+    .metric .val { font-size: 1.15rem; font-weight: 700; }
+    .metric .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .metric-divider { width: 1px; height: 36px; background: var(--border); }
+
+    .recal-btn {
+      display: block; margin: 16px auto 0;
+      background: none; border: none;
+      color: var(--muted); font-size: 13px; cursor: pointer;
+    }
+
+    /* ── PERMISSION SCREEN ───────────────────────────────── */
+    #permission {
+      align-items: center; justify-content: center;
+      padding: 40px 32px;
+      text-align: center; gap: 20px;
+    }
+    #permission h2 { font-size: 1.5rem; font-weight: 700; }
+    #permission p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    #permission .icon { font-size: 64px; }
+  </style>
+</head>
+<body>
+
+<!-- ── SETUP SCREEN ─────────────────────────────────────── -->
+<div id="setup" class="screen active">
+  <div style="text-align:center">
+    <h1>Green Reader</h1>
+    <div class="subtitle">How to read a putt</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="diagram">
+      <div class="diagram-hole">
+        <div class="hole-circle"></div>
+        <div class="diagram-label">HOLE</div>
+      </div>
+      <div class="diagram-phone">
+        <div class="top-label">TOP</div>
+        <div class="arrow">↑</div>
+      </div>
+      <div class="diagram-ball">
+        <div class="diagram-label">BALL</div>
+        <div class="ball-circle"></div>
+      </div>
+    </div>
+    <div class="caption-badge">Point TOP of phone toward hole</div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><p>Stand behind your ball, facing the hole</p></div>
+    <div class="step"><div class="step-num">2</div><p>Lay your phone flat on the green between ball and hole</p></div>
+    <div class="step"><div class="step-num">3</div><p>Point the <strong>TOP</strong> of the phone toward the hole</p></div>
+    <div class="step"><div class="step-num">4</div><p>Tap Calibrate to zero any case or surface tilt</p></div>
+  </div>
+
+  <div style="width:100%">
+    <button class="btn-primary" onclick="startApp()">Calibrate &amp; Start Reading</button>
+    <button class="btn-ghost" style="width:100%;margin-top:10px" onclick="skipCalibration()">Skip Calibration</button>
+  </div>
+</div>
+
+<!-- ── PERMISSION SCREEN ────────────────────────────────── -->
+<div id="permission" class="screen">
+  <div class="icon">📱</div>
+  <h2>Motion Access Needed</h2>
+  <p>Green Reader needs access to your phone's motion sensors to measure the green's slope.</p>
+  <button class="btn-primary" style="max-width:280px" onclick="requestPermission()">Allow Motion Access</button>
+  <p style="font-size:12px">iOS requires you to tap to grant this permission.</p>
+</div>
+
+<!-- ── READING SCREEN ────────────────────────────────────── -->
+<div id="reading" class="screen">
+  <div class="topbar">
+    <div>
+      <h2>Green Reader</h2>
+      <div class="calibrated-badge ok" id="calBadge">Calibrated</div>
+    </div>
+    <div class="live-dot"><span></span> Live</div>
+  </div>
+
+  <div class="orientation-banner">
+    <span class="icon">↑</span>
+    Top of phone pointing toward hole
+  </div>
+
+  <div class="diagram-canvas-wrap">
+    <canvas id="greenCanvas" height="300"></canvas>
+  </div>
+
+  <div class="card break-card">
+    <div class="break-left">
+      <div id="breakAmount" class="break-amount" style="color:var(--green)">0.0"</div>
+      <div id="breakDir" class="break-dir"></div>
+      <div id="straightLabel" class="straight-label" style="display:none">Straight putt</div>
+      <div id="sevBadge" class="severity-badge">Flat</div>
+    </div>
+    <div class="break-right">
+      <div class="clock-sub">Aim Point</div>
+      <div id="clockLabel" class="clock-label">12 o'clock</div>
+      <div id="updownBadge" style="display:none" class="updown-badge"></div>
+    </div>
+  </div>
+
+  <div class="card slider-card">
+    <label>Putt Distance <span id="distLabel">10 ft</span></label>
+    <input type="range" id="distSlider" min="1" max="60" value="10" step="1" oninput="onDistChange(this.value)" />
+  </div>
+
+  <div class="card metrics">
+    <div class="metric">
+      <div class="val" id="mSlope">0.0°</div>
+      <div class="lbl">Slope</div>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric">
+      <div class="val" id="mGrade">0.0%</div>
+      <div class="lbl">Grade</div>
+    </div>
+    <div class="metric-divider"></div>
+    <div class="metric">
+      <div class="val" id="mLateral">0.0°</div>
+      <div class="lbl">Lateral</div>
+    </div>
+  </div>
+
+  <button class="recal-btn" onclick="showSetup()">↺ Recalibrate</button>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────
+let calibrationBeta  = 0;
+let calibrationGamma = 0;
+let isCalibrated     = false;
+let puttDistance     = 10;   // feet
+let lastReading      = { angle: 0, lateral: 0, longitudinal: 0 };
+let canvas, ctx;
+let animFrame;
+
+// ── Screen helpers ───────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showSetup()       { showScreen('setup'); }
+function showPermission()  { showScreen('permission'); }
+function showReading()     { showScreen('reading'); }
+
+// ── Entry points ─────────────────────────────────────────
+async function startApp() {
+  const ok = await ensurePermission();
+  if (!ok) return;
+  calibrate();
+  showReading();
+}
+
+function skipCalibration() {
+  ensurePermission().then(ok => { if (ok) showReading(); });
+}
+
+// ── Motion permission (iOS 13+) ──────────────────────────
+async function ensurePermission() {
+  if (typeof DeviceOrientationEvent === 'undefined') {
+    alert('Motion sensors not available on this device/browser.');
+    return false;
+  }
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ requires explicit permission
+    try {
+      const result = await DeviceOrientationEvent.requestPermission();
+      if (result !== 'granted') {
+        showPermission();
+        return false;
+      }
+    } catch(e) {
+      // requestPermission must be called from a user gesture
+      showPermission();
+      return false;
+    }
+  }
+  window.addEventListener('deviceorientation', onOrientation, true);
+  return true;
+}
+
+async function requestPermission() {
+  const ok = await ensurePermission();
+  if (ok) { calibrate(); showReading(); }
+}
+
+// ── Calibration ──────────────────────────────────────────
+function calibrate() {
+  calibrationBeta  = lastReading.beta  || 0;
+  calibrationGamma = lastReading.gamma || 0;
+  isCalibrated = true;
+  document.getElementById('calBadge').textContent = 'Calibrated';
+  document.getElementById('calBadge').className = 'calibrated-badge ok';
+}
+
+// ── Motion handler ───────────────────────────────────────
+function onOrientation(e) {
+  // beta:  front-back tilt. Flat phone ≈ 0. Negative = top tilts toward ground (uphill putt)
+  // gamma: left-right tilt. Flat phone ≈ 0. Positive = right side down (breaks right)
+  const rawBeta  = e.beta  ?? 0;
+  const rawGamma = e.gamma ?? 0;
+
+  const beta  = rawBeta  - calibrationBeta;
+  const gamma = rawGamma - calibrationGamma;
+
+  // When phone is flat: beta is longitudinal (pitch), gamma is lateral (roll)
+  const lateralDeg      = gamma;         // positive = right side lower = breaks right
+  const longitudinalDeg = -beta;         // positive = top lower = uphill toward hole
+
+  const angle = Math.sqrt(lateralDeg**2 + longitudinalDeg**2);
+
+  lastReading = { beta: rawBeta, gamma: rawGamma, angle, lateral: lateralDeg, longitudinal: longitudinalDeg };
+  updateUI(lastReading);
+}
+
+// ── Break calculation ────────────────────────────────────
+function calcBreak(lateral, longitudinal, distFeet) {
+  const lateralPct = Math.tan(lateral * Math.PI / 180) * 100;
+  const breakInches = lateralPct * distFeet * 0.9;
+  return breakInches;
+}
+
+function clockPosition(breakInches) {
+  if (Math.abs(breakInches) < 0.5) return '12 o\'clock';
+  const cups   = Math.abs(breakInches) / 4.25;
+  const offset = Math.min(Math.round(cups), 5);
+  if (breakInches > 0) {
+    // breaks right → aim left → counter-clockwise
+    const hour = ((12 - offset) + 12) % 12;
+    return `${hour === 0 ? 12 : hour} o'clock`;
+  } else {
+    // breaks left → aim right → clockwise
+    const hour = offset % 12;
+    return `${hour === 0 ? 12 : hour} o'clock`;
+  }
+}
+
+function severity(inches) {
+  const a = Math.abs(inches);
+  if (a < 1)  return { label: 'Flat',        color: '#33cc66', bg: 'rgba(51,204,102,0.18)' };
+  if (a < 4)  return { label: 'Mild',        color: '#88dd44', bg: 'rgba(136,221,68,0.18)' };
+  if (a < 9)  return { label: 'Moderate',    color: '#ffcc00', bg: 'rgba(255,204,0,0.18)'  };
+  if (a < 18) return { label: 'Significant', color: '#ff8800', bg: 'rgba(255,136,0,0.18)'  };
+  return              { label: 'Severe',     color: '#ff3333', bg: 'rgba(255,51,51,0.18)'   };
+}
+
+// ── UI update ────────────────────────────────────────────
+function updateUI(r) {
+  const breakIn  = calcBreak(r.lateral, r.longitudinal, puttDistance);
+  const absBreak = Math.abs(breakIn);
+  const sev      = severity(breakIn);
+  const clock    = clockPosition(breakIn);
+  const isFlat   = absBreak < 0.5;
+  const breakDir = breakIn > 0 ? 'Right' : 'Left';
+  const isUphill   = r.longitudinal > 0.5;
+  const isDownhill = r.longitudinal < -0.5;
+
+  // Break amount
+  const amountEl = document.getElementById('breakAmount');
+  amountEl.textContent = absBreak.toFixed(1) + '"';
+  amountEl.style.color = sev.color;
+
+  document.getElementById('breakDir').textContent   = isFlat ? '' : breakDir;
+  document.getElementById('straightLabel').style.display = isFlat ? 'block' : 'none';
+  document.getElementById('breakDir').style.display      = isFlat ? 'none'  : 'block';
+
+  const sevEl = document.getElementById('sevBadge');
+  sevEl.textContent   = sev.label;
+  sevEl.style.background = sev.bg;
+  sevEl.style.color      = sev.color;
+
+  document.getElementById('clockLabel').textContent = clock;
+
+  const udEl = document.getElementById('updownBadge');
+  if (isUphill || isDownhill) {
+    udEl.style.display = 'inline-flex';
+    udEl.textContent   = isUphill ? '↑ Uphill' : '↓ Downhill';
+    udEl.className     = 'updown-badge ' + (isUphill ? 'uphill' : 'downhill');
+  } else {
+    udEl.style.display = 'none';
+  }
+
+  // Metrics
+  document.getElementById('mSlope').textContent   = r.angle.toFixed(1) + '°';
+  document.getElementById('mGrade').textContent   = (Math.tan(r.angle * Math.PI/180)*100).toFixed(1) + '%';
+  document.getElementById('mLateral').textContent = Math.abs(r.lateral).toFixed(1) + '°';
+
+  // Canvas
+  drawDiagram(breakIn);
+}
+
+function onDistChange(val) {
+  puttDistance = parseInt(val);
+  document.getElementById('distLabel').textContent = val + ' ft';
+  updateUI(lastReading);
+}
+
+// ── Canvas diagram ───────────────────────────────────────
+function drawDiagram(breakInches) {
+  if (!canvas) {
+    canvas = document.getElementById('greenCanvas');
+    ctx    = canvas.getContext('2d');
+  }
+  const W = canvas.offsetWidth;
+  canvas.width  = W;
+  canvas.height = 300;
+  const H = 300;
+
+  // Green background with slope gradient
+  const tilt   = Math.max(-1, Math.min(1, breakInches / 20));
+  const grd    = ctx.createLinearGradient(W*(0.5-tilt*0.4), 0, W*(0.5+tilt*0.4), 0);
+  grd.addColorStop(0, '#0d3810');
+  grd.addColorStop(1, '#1a5c1a');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+
+  const ballX = W / 2;
+  const ballY = H * 0.82;
+  const cupX  = W / 2;
+  const cupY  = H * 0.16;
+
+  // Lateral offset for break curve
+  const maxBreak = 30;
+  const clamped  = Math.max(-maxBreak, Math.min(maxBreak, breakInches));
+  const offset   = (clamped / maxBreak) * (W * 0.28);
+
+  // Break path (dashed curve)
+  const midX = (ballX + cupX) / 2 + offset;
+  const midY = (ballY + cupY) / 2;
+  ctx.beginPath();
+  ctx.moveTo(ballX, ballY);
+  ctx.quadraticCurveTo(midX, midY, cupX, cupY);
+  ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth   = 2.5;
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Aim line (yellow dashed)
+  if (Math.abs(breakInches) > 0.5) {
+    const aimX = cupX + offset * 0.85;
+    ctx.beginPath();
+    ctx.moveTo(ballX, ballY);
+    ctx.lineTo(aimX, cupY);
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = 'rgba(255,204,0,0.7)';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // AIM dot
+    ctx.beginPath();
+    ctx.arc(aimX, cupY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,204,0,0.9)';
+    ctx.fill();
+
+    // AIM label
+    ctx.fillStyle = 'rgba(255,204,0,0.9)';
+    ctx.font = 'bold 9px -apple-system, sans-serif';
+    ctx.textAlign = offset > 0 ? 'left' : 'right';
+    ctx.fillText('AIM', aimX + (offset > 0 ? 8 : -8), cupY + 4);
+  }
+
+  // Cup
+  ctx.beginPath();
+  ctx.arc(cupX, cupY, 9, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = 'bold 9px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('HOLE', cupX, cupY - 16);
+
+  // Ball
+  ctx.beginPath();
+  ctx.arc(ballX, ballY, 9, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = 'bold 9px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('BALL', ballX, ballY + 22);
+
+  // Orientation hint
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = '9px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('↑ top of phone', 10, 14);
+}
+
+// ── Service Worker (offline support) ────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ── Init ─────────────────────────────────────────────────
+// Draw a static diagram on page load
+window.addEventListener('load', () => {
+  // Resize canvas when reading screen first shown
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('reading').classList.contains('active')) {
+      drawDiagram(0);
+    }
+  });
+  observer.observe(document.getElementById('reading'), { attributes: true });
+});
+</script>
+</body>
+</html>
