@@ -180,6 +180,9 @@
     .break-right { text-align: right; }
     .clock-label { font-size: 1.1rem; font-weight: 700; }
     .clock-sub { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .pace-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .pace-label { font-size: 11px; color: var(--muted); }
+    .pace-value { font-size: 13px; font-weight: 700; color: var(--text); }
     .updown-badge {
       display: inline-flex; align-items: center; gap: 4px;
       font-size: 11px; font-weight: 700;
@@ -300,6 +303,10 @@
       <div id="clockLabel" class="clock-label">12 o'clock</div>
       <div id="updownBadge" style="display:none" class="updown-badge"></div>
     </div>
+  </div>
+  <div class="pace-row">
+    <span class="pace-label">Pace — hit it like a</span>
+    <span class="pace-value" id="paceLabel">10 ft putt</span>
   </div>
 
   <div class="card slider-card">
@@ -424,6 +431,18 @@ function calcBreak(lateral, longitudinal, distFeet) {
   return breakInches;
 }
 
+// Effective pace distance:
+// Rule of thumb: every 1ft of elevation change = ~3ft of pace adjustment.
+// Elevation change = distance × grade (as decimal).
+// Uphill = hit it harder (bigger effective dist), downhill = softer (smaller).
+function calcEffectiveDistance(longitudinal, distFeet) {
+  const grade = Math.tan(longitudinal * Math.PI / 180); // as decimal (e.g. 0.05 = 5%)
+  const elevationChange = distFeet * grade;             // feet of rise/fall
+  const adjustment = elevationChange * 3;               // pace adjustment in feet
+  const effective = Math.max(1, Math.round(distFeet + adjustment));
+  return effective;
+}
+
 function clockPosition(breakInches) {
   if (Math.abs(breakInches) < 0.5) return '12 o\'clock';
   const cups   = Math.abs(breakInches) / 4.25;
@@ -451,6 +470,7 @@ function severity(inches) {
 // ── UI update ────────────────────────────────────────────
 function updateUI(r) {
   const breakIn  = calcBreak(r.lateral, r.longitudinal, puttDistance);
+  const effectiveDist = calcEffectiveDistance(r.longitudinal, puttDistance);
   const absBreak = Math.abs(breakIn);
   const sev      = severity(breakIn);
   const clock    = clockPosition(breakIn);
@@ -474,6 +494,7 @@ function updateUI(r) {
   sevEl.style.color      = sev.color;
 
   document.getElementById('clockLabel').textContent = clock;
+  document.getElementById('paceLabel').textContent = effectiveDist + ' ft putt';
 
   const udEl = document.getElementById('updownBadge');
   if (isUphill || isDownhill) {
