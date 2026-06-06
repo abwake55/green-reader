@@ -511,7 +511,7 @@ function updateUI(r) {
   document.getElementById('mLateral').textContent = Math.abs(r.lateral).toFixed(1) + '°';
 
   // Canvas
-  drawDiagram(breakIn);
+  drawDiagram(breakIn, puttDistance, effectiveDist);
 }
 
 function onDistChange(val) {
@@ -521,7 +521,7 @@ function onDistChange(val) {
 }
 
 // ── Canvas diagram ───────────────────────────────────────
-function drawDiagram(breakInches) {
+function drawDiagram(breakInches, actualDist, effectiveDist) {
   if (!canvas) {
     canvas = document.getElementById('greenCanvas');
     ctx    = canvas.getContext('2d');
@@ -531,9 +531,9 @@ function drawDiagram(breakInches) {
   canvas.height = 300;
   const H = 300;
 
-  // Green background with slope gradient
-  const tilt   = Math.max(-1, Math.min(1, breakInches / 20));
-  const grd    = ctx.createLinearGradient(W*(0.5-tilt*0.4), 0, W*(0.5+tilt*0.4), 0);
+  // Green background with lateral slope gradient hint
+  const tilt = Math.max(-1, Math.min(1, breakInches / 20));
+  const grd  = ctx.createLinearGradient(W*(0.5-tilt*0.4), 0, W*(0.5+tilt*0.4), 0);
   grd.addColorStop(0, '#0d3810');
   grd.addColorStop(1, '#1a5c1a');
   ctx.fillStyle = grd;
@@ -543,65 +543,83 @@ function drawDiagram(breakInches) {
   const ballY = H * 0.82;
   const cupX  = W / 2;
   const cupY  = H * 0.16;
+  const span  = ballY - cupY;  // vertical pixels representing actualDist
 
-  // Lateral offset for break curve
-  const maxBreak = 30;
-  const clamped  = Math.max(-maxBreak, Math.min(maxBreak, breakInches));
-  const offset   = (clamped / maxBreak) * (W * 0.28);
+  // ── Phantom hole (aim target) ──────────────────────────
+  // Lateral: offset by break amount
+  const maxBreak  = 30;
+  const clamped   = Math.max(-maxBreak, Math.min(maxBreak, breakInches));
+  const lateralPx = (clamped / maxBreak) * (W * 0.28);
 
-  // Break path (dashed curve)
-  const midX = (ballX + cupX) / 2 + offset;
+  // Vertical: scale by effectiveDist / actualDist
+  // effectiveDist > actualDist → phantom hole is further away (higher on screen, smaller Y)
+  const distRatio  = (actualDist > 0) ? (effectiveDist / actualDist) : 1;
+  const phantomY   = ballY - span * distRatio;
+  // Clamp so it stays within the canvas with a margin
+  const aimY = Math.max(12, Math.min(ballY - 20, phantomY));
+  const aimX = cupX + lateralPx;
+
+  // ── Ball path curve (dashed white) ────────────────────
+  // Curves from ball → actual hole, controlled by lateral break
+  const midX = (ballX + cupX) / 2 + lateralPx;
   const midY = (ballY + cupY) / 2;
   ctx.beginPath();
   ctx.moveTo(ballX, ballY);
   ctx.quadraticCurveTo(midX, midY, cupX, cupY);
   ctx.setLineDash([6, 5]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-  ctx.lineWidth   = 2.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth   = 2;
   ctx.lineCap     = 'round';
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Aim line (yellow dashed)
-  if (Math.abs(breakInches) > 0.5) {
-    const aimX = cupX + offset * 0.85;
-    ctx.beginPath();
-    ctx.moveTo(ballX, ballY);
-    ctx.lineTo(aimX, cupY);
-    ctx.setLineDash([4, 6]);
-    ctx.strokeStyle = 'rgba(255,204,0,0.7)';
-    ctx.lineWidth   = 1.5;
-    ctx.stroke();
-    ctx.setLineDash([]);
+  // ── Aim line: ball → phantom hole (solid yellow) ──────
+  ctx.beginPath();
+  ctx.moveTo(ballX, ballY);
+  ctx.lineTo(aimX, aimY);
+  ctx.setLineDash([4, 6]);
+  ctx.strokeStyle = 'rgba(255,204,0,0.8)';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-    // AIM dot
-    ctx.beginPath();
-    ctx.arc(aimX, cupY, 5, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,204,0,0.9)';
-    ctx.fill();
+  // ── Phantom hole dot (gold, larger) ───────────────────
+  // Outer glow
+  ctx.beginPath();
+  ctx.arc(aimX, aimY, 13, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,204,0,0.15)';
+  ctx.fill();
+  // Inner dot
+  ctx.beginPath();
+  ctx.arc(aimX, aimY, 8, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,204,0,0.95)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 
-    // AIM label
-    ctx.fillStyle = 'rgba(255,204,0,0.9)';
-    ctx.font = 'bold 9px -apple-system, sans-serif';
-    ctx.textAlign = offset > 0 ? 'left' : 'right';
-    ctx.fillText('AIM', aimX + (offset > 0 ? 8 : -8), cupY + 4);
-  }
+  // AIM label
+  ctx.fillStyle = 'rgba(255,204,0,0.95)';
+  ctx.font = 'bold 10px -apple-system, sans-serif';
+  ctx.textAlign = lateralPx >= 0 ? 'left' : 'right';
+  const labelOffX = lateralPx >= 0 ? 14 : -14;
+  ctx.fillText('AIM HERE', aimX + labelOffX, aimY + 4);
 
-  // Cup
+  // ── Actual cup ────────────────────────────────────────
   ctx.beginPath();
   ctx.arc(cupX, cupY, 9, 0, Math.PI * 2);
   ctx.fillStyle = 'rgba(0,0,0,0.85)';
   ctx.fill();
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
   ctx.font = 'bold 9px -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('HOLE', cupX, cupY - 16);
 
-  // Ball
+  // ── Ball ──────────────────────────────────────────────
   ctx.beginPath();
   ctx.arc(ballX, ballY, 9, 0, Math.PI * 2);
   ctx.fillStyle = '#fff';
@@ -612,8 +630,8 @@ function drawDiagram(breakInches) {
   ctx.textAlign = 'center';
   ctx.fillText('BALL', ballX, ballY + 22);
 
-  // Orientation hint
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  // ── Orientation hint ──────────────────────────────────
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
   ctx.font = '9px -apple-system, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('↑ top of phone', 10, 14);
@@ -630,7 +648,7 @@ window.addEventListener('load', () => {
   // Resize canvas when reading screen first shown
   const observer = new MutationObserver(() => {
     if (document.getElementById('reading').classList.contains('active')) {
-      drawDiagram(0);
+      drawDiagram(0, puttDistance, puttDistance);
     }
   });
   observer.observe(document.getElementById('reading'), { attributes: true });
