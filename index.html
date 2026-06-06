@@ -332,17 +332,17 @@
           </div>
           <button class="tempo-feel-btn" id="tempoBtn" onclick="toggleMetronome()">▶ Feel It</button>
         </div>
-        <!-- Beat visualizer: back(1)──────(2) through -->
+        <!-- Beat visualizer: 2 bars sized to match 2:1 ratio -->
         <div>
-          <div class="beat-row">
-            <div class="beat-dot accent" id="beat0"></div>
-            <div class="beat-dot" id="beat1"></div>
-            <div class="beat-dot" id="beat2"></div>
-            <div class="beat-dot accent" id="beat3"></div>
-          </div>
-          <div class="beat-labels" style="margin-top:5px">
-            <span>BACK</span>
-            <span>THROUGH</span>
+          <div class="beat-row" style="gap:12px;align-items:stretch">
+            <div style="flex:2;display:flex;flex-direction:column;align-items:center;gap:5px">
+              <div class="beat-dot" id="beatBack" style="width:100%;height:10px;border-radius:5px"></div>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.5px">BACK (2)</span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
+              <div class="beat-dot" id="beatThrough" style="width:100%;height:10px;border-radius:5px"></div>
+              <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.5px">THROUGH (1)</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1067,21 +1067,20 @@ let metronomeActive = false;
 let metronomeTimer  = null;
 let audioCtx        = null;
 let currentBpm      = 76;
-let beatPhase       = 0; // 0=back, 1=mid1, 2=mid2, 3=through
+let onBackPhase     = true; // true = backswing phase, false = through phase
 
 function calcTempo(distFeet, longitudinal) {
-  // Base BPM decreases with distance (longer stroke = slower rhythm)
-  // Range: ~82 BPM (3ft) → ~60 BPM (50ft)
+  // BPM = full stroke cycles per minute
+  // Range: 82 BPM (3 ft) → 60 BPM (50 ft)
   const base = Math.round(Math.max(60, Math.min(82, 83 - distFeet * 0.46)));
-  // Slope adjustment: downhill = slower (more control), uphill = slightly faster
-  const adj = longitudinal < -0.5 ? -3 : longitudinal > 0.5 ? 2 : 0;
+  const adj  = longitudinal < -0.5 ? -3 : longitudinal > 0.5 ? 2 : 0;
   return base + adj;
 }
 
 function tempoDescription(bpm, longitudinal) {
-  const pace = bpm >= 78 ? 'Crisp, short stroke' : bpm >= 70 ? 'Smooth, steady stroke' : 'Long, sweeping stroke';
-  const slope = longitudinal < -0.5 ? ' · stay controlled downhill' : longitudinal > 0.5 ? ' · commit through the ball' : '';
-  return pace + slope;
+  const feel  = bpm >= 78 ? 'Crisp, compact stroke' : bpm >= 70 ? 'Smooth, steady stroke' : 'Long, sweeping stroke';
+  const slope = longitudinal < -0.5 ? ' · stay controlled' : longitudinal > 0.5 ? ' · commit through it' : '';
+  return feel + slope;
 }
 
 function updateTempo() {
@@ -1089,23 +1088,21 @@ function updateTempo() {
   currentBpm = bpm;
   document.getElementById('tempoBpm').textContent  = bpm;
   document.getElementById('tempoDesc').textContent = tempoDescription(bpm, lastReading.longitudinal);
-  // Restart metronome at new rate if active
   if (metronomeActive) { stopMetronome(); startMetronome(); }
 }
 
 function toggleMetronome() {
-  if (metronomeActive) { stopMetronome(); } else { startMetronome(); }
+  if (metronomeActive) stopMetronome(); else startMetronome();
 }
 
 function startMetronome() {
   metronomeActive = true;
-  beatPhase = 0;
+  onBackPhase     = true;
   document.getElementById('tempoBtn').textContent = '■ Stop';
   document.getElementById('tempoBtn').classList.add('active');
-  // Unlock AudioContext on user gesture
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  scheduleBeat();
+  tick();
 }
 
 function stopMetronome() {
@@ -1113,72 +1110,62 @@ function stopMetronome() {
   clearTimeout(metronomeTimer);
   document.getElementById('tempoBtn').textContent = '▶ Feel It';
   document.getElementById('tempoBtn').classList.remove('active');
-  // Reset all beat dots
-  for (let i = 0; i < 4; i++) {
-    const d = document.getElementById('beat' + i);
-    if (d) { d.classList.remove('lit-back','lit-through'); }
-  }
+  resetBeatDots();
 }
 
-function scheduleBeat() {
+function tick() {
   if (!metronomeActive) return;
 
-  // 2:1 ratio: backswing = 2 beats, forward swing = 1 beat
-  // We divide into 3 equal intervals within one full stroke cycle (back + through)
-  // beat 0 = start of backswing (accent click)
-  // beat 3 = start of forward swing / impact (accent click, different pitch)
-  // Interval between beats = (60/bpm/3)*1000 ms ... actually let's use full BPM as the "through" beat
-  // Standard: bpm is strokes per minute. One stroke = back + through.
-  // Back takes 2/3 of the cycle, through takes 1/3.
-  const cycleDuration = (60 / currentBpm) * 1000; // ms per full stroke
+  // One full stroke cycle = 60000/BPM ms
+  // 2:1 ratio → back = 2/3 of cycle, through = 1/3 of cycle
+  const cycle   = (60 / currentBpm) * 1000;
+  const backMs  = cycle * (2 / 3);
+  const throughMs = cycle * (1 / 3);
 
-  // Phase 0: BACK (big accent) — duration = 2/3 of cycle
-  // Phase 3: THROUGH (impact accent) — duration = 1/3 of cycle
-  // We'll fire 4 visual beats but only 2 audible clicks
-
-  if (beatPhase === 0) {
-    // Backswing click — lower pitch
-    playClick(220, 0.5, 'back');
-    lightBeat(0, 'lit-back');
-  } else if (beatPhase === 1) {
-    lightBeat(1, 'lit-back');
-  } else if (beatPhase === 2) {
-    lightBeat(2, 'lit-back');
-  } else if (beatPhase === 3) {
-    // Through / impact click — higher pitch
-    playClick(440, 0.7, 'through');
-    lightBeat(3, 'lit-through');
+  if (onBackPhase) {
+    playClick(200, 0.45);   // low thud = start backswing
+    litBack();
+    metronomeTimer = setTimeout(() => { onBackPhase = false; tick(); }, backMs);
+  } else {
+    playClick(440, 0.7);    // high click = strike / through
+    litThrough();
+    metronomeTimer = setTimeout(() => { onBackPhase = true;  tick(); }, throughMs);
   }
-
-  const nextPhase = (beatPhase + 1) % 4;
-  // Each of the 3 back subdivisions = cycleDuration/3, through = cycleDuration/3
-  const intervalMs = cycleDuration / 3;
-
-  beatPhase = nextPhase;
-  metronomeTimer = setTimeout(scheduleBeat, intervalMs);
 }
 
-function lightBeat(idx, cls) {
-  for (let i = 0; i < 4; i++) {
-    const d = document.getElementById('beat' + i);
-    if (d) d.classList.remove('lit-back','lit-through');
-  }
-  const d = document.getElementById('beat' + idx);
-  if (d) d.classList.add(cls);
+function litBack() {
+  const b = document.getElementById('beatBack');
+  const t = document.getElementById('beatThrough');
+  if (b) { b.classList.add('lit-back');     b.classList.remove('lit-through'); }
+  if (t) { t.classList.remove('lit-back', 'lit-through'); }
+}
+function litThrough() {
+  const b = document.getElementById('beatBack');
+  const t = document.getElementById('beatThrough');
+  if (t) { t.classList.add('lit-through');  t.classList.remove('lit-back'); }
+  if (b) { b.classList.remove('lit-back', 'lit-through'); }
+}
+function resetBeatDots() {
+  ['beatBack','beatThrough'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('lit-back','lit-through');
+  });
 }
 
-function playClick(freq, gain, type) {
+function playClick(freq, gain) {
   if (!audioCtx) return;
   try {
     const osc = audioCtx.createOscillator();
     const env = audioCtx.createGain();
-    osc.connect(env); env.connect(audioCtx.destination);
+    osc.connect(env);
+    env.connect(audioCtx.destination);
     osc.frequency.value = freq;
     osc.type = 'sine';
     const now = audioCtx.currentTime;
     env.gain.setValueAtTime(gain, now);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-    osc.start(now); osc.stop(now + 0.09);
+    env.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    osc.start(now);
+    osc.stop(now + 0.1);
   } catch(e) {}
 }
 
