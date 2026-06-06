@@ -319,11 +319,7 @@
 
       <!-- Metrics -->
       <div class="card metrics">
-        <div class="metric"><div class="val" id="mSlope">0.0°</div><div class="lbl">Slope</div></div>
-        <div class="metric-divider"></div>
-        <div class="metric"><div class="val" id="mGrade">0.0%</div><div class="lbl">Grade</div></div>
-        <div class="metric-divider"></div>
-        <div class="metric"><div class="val" id="mLateral">0.0°</div><div class="lbl">Lateral</div></div>
+        <div class="metric"><div class="val" id="mGrade">0.0%</div><div class="lbl">Green Grade</div></div>
       </div>
 
 
@@ -743,9 +739,7 @@ function updateUI(r) {
     udEl.className     = 'updown-badge ' + (isUphill ? 'uphill' : 'downhill');
   } else { udEl.style.display = 'none'; }
 
-  document.getElementById('mSlope').textContent   = r.angle.toFixed(1) + '°';
-  document.getElementById('mGrade').textContent   = (Math.tan(r.angle * Math.PI/180)*100).toFixed(1) + '%';
-  document.getElementById('mLateral').textContent = Math.abs(r.lateral).toFixed(1) + '°';
+  document.getElementById('mGrade').textContent = (Math.tan(r.angle * Math.PI/180)*100).toFixed(1) + '%';
 
   drawDiagram(breakIn, puttDistance, effectiveDist);
 }
