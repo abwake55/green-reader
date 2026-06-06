@@ -295,10 +295,9 @@
       <!-- Break summary -->
       <div class="card break-card">
         <div>
-          <div id="breakAmount" class="break-amount" style="color:var(--green)">0.0"</div>
-          <div id="breakDir" class="break-dir"></div>
+          <div id="breakDir" class="break-amount" style="font-size:2rem"></div>
           <div id="straightLabel" style="display:none;font-size:1.1rem;font-weight:700">Straight putt</div>
-          <div id="sevBadge" class="severity-badge">Flat</div>
+          <div id="sevBadge" class="severity-badge" style="margin-top:8px">Flat</div>
         </div>
         <div class="break-right">
           <div class="clock-sub">Aim Point</div>
@@ -720,10 +719,10 @@ function updateUI(r) {
   const isUphill     = r.longitudinal > 0.5;
   const isDownhill   = r.longitudinal < -0.5;
 
-  document.getElementById('breakAmount').textContent = absBreak.toFixed(1) + '"';
-  document.getElementById('breakAmount').style.color = sev.color;
-  document.getElementById('breakDir').textContent    = isFlat ? '' : (breakIn > 0 ? 'Right' : 'Left');
-  document.getElementById('breakDir').style.display  = isFlat ? 'none' : 'block';
+  const dirEl = document.getElementById('breakDir');
+  dirEl.textContent  = isFlat ? '' : (breakIn > 0 ? 'Breaks Right' : 'Breaks Left');
+  dirEl.style.color  = sev.color;
+  dirEl.style.display = isFlat ? 'none' : 'block';
   document.getElementById('straightLabel').style.display = isFlat ? 'block' : 'none';
 
   const sevEl = document.getElementById('sevBadge');
