@@ -333,7 +333,6 @@
         <div>
           <div class="sweep-wrap">
             <div class="sweep-fill" id="sweepFill"></div>
-            <div class="sweep-flash" id="sweepFlash"></div>
           </div>
           <div class="sweep-phase-label">
             <span id="sweepLabel">Press Feel It to start</span>
@@ -1090,66 +1089,62 @@ function toggleMetronome() {
   if (metronomeActive) stopMetronome(); else startMetronome();
 }
 
+let rafId       = null;
+let phaseStart  = 0;
+
 function startMetronome() {
   metronomeActive = true;
   onBackPhase     = true;
+  phaseStart      = performance.now();
   document.getElementById('tempoBtn').textContent = '■ Stop';
   document.getElementById('tempoBtn').classList.add('active');
-  tick();
+  rafId = requestAnimationFrame(animateSweep);
 }
 
 function stopMetronome() {
   metronomeActive = false;
-  clearTimeout(metronomeTimer);
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  const fill  = document.getElementById('sweepFill');
+  const label = document.getElementById('sweepLabel');
+  if (fill)  { fill.style.width = '0%'; fill.style.background = 'var(--blue)'; }
+  if (label) label.textContent = 'Press Feel It to start';
   document.getElementById('tempoBtn').textContent = '▶ Feel It';
   document.getElementById('tempoBtn').classList.remove('active');
-  // Reset bar
-  const fill  = document.getElementById('sweepFill');
-  const flash = document.getElementById('sweepFlash');
-  const label = document.getElementById('sweepLabel');
-  if (fill)  { fill.style.transition  = 'none'; fill.style.width = '0%'; }
-  if (flash) { flash.style.transition = 'none'; flash.style.opacity = '0'; }
-  if (label) label.textContent = 'Press Feel It to start';
 }
 
-function tick() {
+function animateSweep(now) {
   if (!metronomeActive) return;
 
-  const cycle    = (60 / currentBpm) * 1000; // ms per full stroke
-  const backMs   = cycle * (2 / 3);          // back = 2/3
-  const throughMs = cycle * (1 / 3);         // through = 1/3
-
-  const fill  = document.getElementById('sweepFill');
-  const flash = document.getElementById('sweepFlash');
-  const label = document.getElementById('sweepLabel');
+  const cycle    = (60 / currentBpm) * 1000;
+  const backMs   = cycle * (2 / 3);
+  const throughMs = cycle * (1 / 3);
+  const elapsed  = now - phaseStart;
+  const fill     = document.getElementById('sweepFill');
+  const label    = document.getElementById('sweepLabel');
 
   if (onBackPhase) {
-    // Sweep bar slowly fills left→right over backMs
-    if (fill) {
-      fill.style.transition = 'none';
-      fill.style.width = '0%';
-      fill.style.background = 'var(--blue)';
-      // Force reflow so transition applies
-      fill.getBoundingClientRect();
-      fill.style.transition = `width ${backMs}ms linear`;
-      fill.style.width = '100%';
-    }
-    if (flash) { flash.style.transition = 'none'; flash.style.opacity = '0'; }
+    // Slowly fill bar left → right
+    const pct = Math.min(elapsed / backMs, 1) * 100;
+    if (fill) { fill.style.width = pct + '%'; fill.style.background = 'var(--blue)'; }
     if (label) label.textContent = '← BACK...';
-    metronomeTimer = setTimeout(() => { onBackPhase = false; tick(); }, backMs);
-  } else {
-    // Flash green instantly for the through swing, then reset
-    if (flash) {
-      flash.style.transition = 'none';
-      flash.style.opacity = '1';
-      flash.getBoundingClientRect();
-      flash.style.transition = `opacity ${throughMs * 0.8}ms ease-out`;
-      flash.style.opacity = '0';
+    if (elapsed >= backMs) {
+      // Switch to through phase
+      onBackPhase = false;
+      phaseStart  = now;
     }
-    if (fill) { fill.style.transition = 'none'; fill.style.width = '0%'; }
+  } else {
+    // Quickly drain bar right → left (green)
+    const pct = Math.max(1 - elapsed / throughMs, 0) * 100;
+    if (fill) { fill.style.width = pct + '%'; fill.style.background = 'var(--green)'; }
     if (label) label.textContent = 'THROUGH! →';
-    metronomeTimer = setTimeout(() => { onBackPhase = true; tick(); }, throughMs);
+    if (elapsed >= throughMs) {
+      // Switch back to back phase
+      onBackPhase = true;
+      phaseStart  = now;
+    }
   }
+
+  rafId = requestAnimationFrame(animateSweep);
 }
 
 // ────────────────────────────────────────────────────────
