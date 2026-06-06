@@ -1089,62 +1089,52 @@ function toggleMetronome() {
   if (metronomeActive) stopMetronome(); else startMetronome();
 }
 
-let rafId       = null;
-let phaseStart  = 0;
+let sweepInterval = null;
+let phaseElapsed  = 0;
+const TICK_MS     = 50; // update every 50ms
 
 function startMetronome() {
   metronomeActive = true;
   onBackPhase     = true;
-  phaseStart      = performance.now();
+  phaseElapsed    = 0;
   document.getElementById('tempoBtn').textContent = '■ Stop';
   document.getElementById('tempoBtn').classList.add('active');
-  rafId = requestAnimationFrame(animateSweep);
+  sweepInterval = setInterval(sweepTick, TICK_MS);
 }
 
 function stopMetronome() {
   metronomeActive = false;
-  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  clearInterval(sweepInterval);
+  sweepInterval = null;
+  document.getElementById('tempoBtn').textContent = '▶ Feel It';
+  document.getElementById('tempoBtn').classList.remove('active');
   const fill  = document.getElementById('sweepFill');
   const label = document.getElementById('sweepLabel');
   if (fill)  { fill.style.width = '0%'; fill.style.background = 'var(--blue)'; }
   if (label) label.textContent = 'Press Feel It to start';
-  document.getElementById('tempoBtn').textContent = '▶ Feel It';
-  document.getElementById('tempoBtn').classList.remove('active');
 }
 
-function animateSweep(now) {
-  if (!metronomeActive) return;
+function sweepTick() {
+  phaseElapsed += TICK_MS;
 
-  const cycle    = (60 / currentBpm) * 1000;
-  const backMs   = cycle * (2 / 3);
+  const cycle     = (60 / currentBpm) * 1000;
+  const backMs    = cycle * (2 / 3);
   const throughMs = cycle * (1 / 3);
-  const elapsed  = now - phaseStart;
-  const fill     = document.getElementById('sweepFill');
-  const label    = document.getElementById('sweepLabel');
+
+  const fill  = document.getElementById('sweepFill');
+  const label = document.getElementById('sweepLabel');
 
   if (onBackPhase) {
-    // Slowly fill bar left → right
-    const pct = Math.min(elapsed / backMs, 1) * 100;
-    if (fill) { fill.style.width = pct + '%'; fill.style.background = 'var(--blue)'; }
+    const pct = Math.min(phaseElapsed / backMs, 1) * 100;
+    if (fill)  { fill.style.width = pct + '%'; fill.style.background = 'var(--blue)'; }
     if (label) label.textContent = '← BACK...';
-    if (elapsed >= backMs) {
-      // Switch to through phase
-      onBackPhase = false;
-      phaseStart  = now;
-    }
+    if (phaseElapsed >= backMs) { onBackPhase = false; phaseElapsed = 0; }
   } else {
-    // Quickly drain bar right → left (green)
-    const pct = Math.max(1 - elapsed / throughMs, 0) * 100;
-    if (fill) { fill.style.width = pct + '%'; fill.style.background = 'var(--green)'; }
+    const pct = Math.max(1 - phaseElapsed / throughMs, 0) * 100;
+    if (fill)  { fill.style.width = pct + '%'; fill.style.background = 'var(--green)'; }
     if (label) label.textContent = 'THROUGH! →';
-    if (elapsed >= throughMs) {
-      // Switch back to back phase
-      onBackPhase = true;
-      phaseStart  = now;
-    }
+    if (phaseElapsed >= throughMs) { onBackPhase = true; phaseElapsed = 0; }
   }
-
-  rafId = requestAnimationFrame(animateSweep);
 }
 
 // ────────────────────────────────────────────────────────
