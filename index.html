@@ -737,7 +737,7 @@ function updateUI(r) {
   const isDownhill   = r.longitudinal < -0.5;
 
   const dirEl = document.getElementById('breakDir');
-  dirEl.textContent  = isFlat ? '' : (breakIn > 0 ? 'Breaks Right' : 'Breaks Left');
+  dirEl.textContent  = isFlat ? '' : (breakIn > 0 ? 'Right ▶' : '◀ Left');
   dirEl.style.color  = sev.color;
   dirEl.style.display = isFlat ? 'none' : 'block';
   document.getElementById('straightLabel').style.display = isFlat ? 'block' : 'none';
