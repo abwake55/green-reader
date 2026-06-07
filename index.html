@@ -829,10 +829,8 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
     ctx.fillText('APEX', hpx + (lateralPx > 0 ? 8 : -8), hpy + 4);
   }
 
-  // Aim line (gold curved, mirrors ball path in opposite direction)
-  const aimMidX = (ballX + aimX) / 2 - lateralPx;
-  const aimMidY = (ballY + aimY) / 2;
-  ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(aimMidX,aimMidY,aimX,aimY);
+  // Aim line (gold straight — represents the direction you point your putter)
+  ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.lineTo(aimX,aimY);
   ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,204,0,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
   // Phantom hole glow + dot
