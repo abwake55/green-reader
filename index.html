@@ -794,9 +794,9 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   const aimY = Math.max(14, Math.min(ballY - 24, ballY - span * distRatio));
   const aimX = cupX - lateralPx;  // aim OPPOSITE to break direction
 
-  // Realistic break: control point shifted 75% toward hole (putts curve more at the end as they slow)
+  // Control point at midpoint laterally offset — keeps the arc visually clean
   const midX = (ballX + cupX) / 2 + lateralPx;
-  const midY = cupY + span * 0.25;  // 25% above cup = 75% up from ball
+  const midY = (ballY + cupY) / 2;
 
   // Ball path (white dashed curve → hole)
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
@@ -830,9 +830,8 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   }
 
   // Aim line (gold curved, mirrors ball path in opposite direction)
-  const aimSpan = ballY - aimY;
   const aimMidX = (ballX + aimX) / 2 - lateralPx;
-  const aimMidY = aimY + aimSpan * 0.25;
+  const aimMidY = (ballY + aimY) / 2;
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(aimMidX,aimMidY,aimX,aimY);
   ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,204,0,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
