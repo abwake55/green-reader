@@ -795,7 +795,7 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   const aimX = cupX - lateralPx;  // aim OPPOSITE to break direction
 
   // Ball path — white dashed curve showing how the ball breaks to the hole
-  const midX = (ballX + cupX) / 2 + lateralPx;
+  const midX = (ballX + cupX) / 2 - lateralPx;
   const midY = (ballY + cupY) / 2;
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
   ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke(); ctx.setLineDash([]);
