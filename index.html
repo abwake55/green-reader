@@ -799,8 +799,10 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
   ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke(); ctx.setLineDash([]);
 
-  // Aim line (gold → phantom hole)
-  ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.lineTo(aimX,aimY);
+  // Aim line (gold → phantom hole, curved to mirror ball path)
+  const aimMidX = (ballX + aimX) / 2 - lateralPx;
+  const aimMidY = (ballY + aimY) / 2;
+  ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(aimMidX,aimMidY,aimX,aimY);
   ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,204,0,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
   // Phantom hole glow + dot
