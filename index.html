@@ -296,7 +296,7 @@
       <div class="card break-card">
         <div>
           <div id="breakDir" class="break-amount" style="font-size:2rem"></div>
-          <div id="straightLabel" style="display:none;font-size:1.1rem;font-weight:700">Straight putt</div>
+          <div id="straightLabel" style="display:none;font-size:1.1rem;font-weight:700">Breaking Straight</div>
           <div id="sevBadge" class="severity-badge" style="margin-top:8px">Flat</div>
         </div>
         <div class="break-right">
@@ -737,7 +737,7 @@ function updateUI(r) {
   const isDownhill   = r.longitudinal < -0.5;
 
   const dirEl = document.getElementById('breakDir');
-  dirEl.textContent  = isFlat ? '' : (breakIn > 0 ? 'Right ▶' : '◀ Left');
+  dirEl.textContent  = isFlat ? '' : (breakIn > 0 ? 'Breaking Right' : 'Breaking Left');
   dirEl.style.color  = sev.color;
   dirEl.style.display = isFlat ? 'none' : 'block';
   document.getElementById('straightLabel').style.display = isFlat ? 'block' : 'none';
