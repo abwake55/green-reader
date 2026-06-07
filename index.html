@@ -794,14 +794,45 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   const aimY = Math.max(14, Math.min(ballY - 24, ballY - span * distRatio));
   const aimX = cupX - lateralPx;  // aim OPPOSITE to break direction
 
+  // Realistic break: control point shifted 75% toward hole (putts curve more at the end as they slow)
+  const midX = (ballX + cupX) / 2 + lateralPx;
+  const midY = cupY + span * 0.25;  // 25% above cup = 75% up from ball
+
   // Ball path (white dashed curve → hole)
-  const midX = (ballX+cupX)/2 + lateralPx, midY = (ballY+cupY)/2;
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
   ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke(); ctx.setLineDash([]);
 
-  // Aim line (gold → phantom hole, curved to mirror ball path)
+  // Arrowhead at hole end (tangent direction: control point → cup)
+  if (Math.abs(lateralPx) > 4) {
+    const tdx = cupX - midX, tdy = cupY - midY;
+    const tlen = Math.sqrt(tdx*tdx + tdy*tdy);
+    const tx = tdx/tlen, ty = tdy/tlen;
+    const perpX = -ty, perpY = tx;
+    const as = 7;
+    ctx.beginPath();
+    ctx.moveTo(cupX, cupY);
+    ctx.lineTo(cupX - tx*as + perpX*as*0.55, cupY - ty*as + perpY*as*0.55);
+    ctx.lineTo(cupX - tx*as - perpX*as*0.55, cupY - ty*as - perpY*as*0.55);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fill();
+  }
+
+  // Apex dot — peak of the break arc at t=0.5 on the bezier
+  if (Math.abs(lateralPx) > 12) {
+    const hpx = 0.25*ballX + 0.5*midX + 0.25*cupX;
+    const hpy = 0.25*ballY + 0.5*midY + 0.25*cupY;
+    ctx.beginPath(); ctx.arc(hpx, hpy, 4.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.font = 'bold 9px -apple-system,sans-serif';
+    ctx.textAlign = lateralPx > 0 ? 'left' : 'right';
+    ctx.fillText('APEX', hpx + (lateralPx > 0 ? 8 : -8), hpy + 4);
+  }
+
+  // Aim line (gold curved, mirrors ball path in opposite direction)
+  const aimSpan = ballY - aimY;
   const aimMidX = (ballX + aimX) / 2 - lateralPx;
-  const aimMidY = (ballY + aimY) / 2;
+  const aimMidY = aimY + aimSpan * 0.25;
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(aimMidX,aimMidY,aimX,aimY);
   ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,204,0,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
