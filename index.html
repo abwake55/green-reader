@@ -792,7 +792,7 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   const lateralPx = (clamped / maxBreak) * (W * 0.28);
   const distRatio = actualDist > 0 ? effectiveDist / actualDist : 1;
   const aimY = Math.max(14, Math.min(ballY - 24, ballY - span * distRatio));
-  const aimX = cupX + lateralPx;
+  const aimX = cupX - lateralPx;  // aim OPPOSITE to break direction
 
   // Ball path (white dashed curve → hole)
   const midX = (ballX+cupX)/2 + lateralPx, midY = (ballY+cupY)/2;
@@ -810,8 +810,8 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
 
   // AIM label
   ctx.fillStyle='rgba(255,204,0,0.95)'; ctx.font='bold 10px -apple-system,sans-serif';
-  ctx.textAlign = lateralPx >= 0 ? 'left' : 'right';
-  ctx.fillText('AIM HERE', aimX + (lateralPx >= 0 ? 14 : -14), aimY + 4);
+  ctx.textAlign = lateralPx >= 0 ? 'right' : 'left';
+  ctx.fillText('AIM HERE', aimX + (lateralPx >= 0 ? -14 : 14), aimY + 4);
 
   // Cup (dimmed — not where you aim)
   ctx.beginPath(); ctx.arc(cupX,cupY,8,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fill();
