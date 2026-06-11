@@ -13,23 +13,23 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --green:  #2ee56e;
-      --green-dim: #1fa84f;
-      --gold:   #ffd60a;
-      --blue:   #5ab0ff;
-      --orange: #ff9f0a;
-      --red:    #ff453a;
-      --bg:     #070d08;
-      --card:   linear-gradient(160deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035));
-      --card-flat: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.09);
-      --text:   #f5f7f5;
-      --muted:  rgba(235,245,235,0.48);
-      --shadow: 0 8px 24px rgba(0,0,0,0.35);
+      --green:  #3fb96d;
+      --green-dim: #2d8a50;
+      --gold:   #d9a514;
+      --blue:   #5a9fd6;
+      --orange: #d98a2b;
+      --red:    #d6564c;
+      --bg:     #101312;
+      --card:   #181c1a;
+      --card-flat: #181c1a;
+      --border: rgba(255,255,255,0.07);
+      --text:   #e9ece9;
+      --muted:  rgba(233,236,233,0.45);
+      --shadow: none;
     }
     html, body {
       height: 100%;
-      background: radial-gradient(120% 90% at 50% 0%, #0d1f10 0%, var(--bg) 60%) fixed;
+      background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       overflow: hidden;
@@ -55,15 +55,10 @@
       position: relative; transition: transform 0.15s ease;
     }
     .nav-btn:active { transform: scale(0.92); }
-    .nav-btn .nav-icon { font-size: 22px; opacity: 0.55; transition: opacity 0.2s; }
+    .nav-btn .nav-icon { width: 22px; height: 22px; color: var(--muted); transition: color 0.2s; }
     .nav-btn .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; transition: color 0.2s; }
-    .nav-btn.active .nav-label { color: var(--green); }
-    .nav-btn.active .nav-icon  { opacity: 1; }
-    .nav-btn.active::before {
-      content: ''; position: absolute; top: -1px; left: 25%; right: 25%; height: 2px;
-      background: var(--green); border-radius: 0 0 2px 2px;
-      box-shadow: 0 0 12px rgba(46,229,110,0.8);
-    }
+    .nav-btn.active .nav-label { color: var(--text); }
+    .nav-btn.active .nav-icon  { color: var(--green); }
 
     /* ── SETUP SCREEN ── */
     #setup {
@@ -97,12 +92,8 @@
 
     /* ── BUTTONS ── */
     .btn { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: transform 0.12s ease, filter 0.12s ease; }
-    .btn:active { transform: scale(0.97); filter: brightness(1.15); }
-    .btn-primary {
-      background: linear-gradient(180deg, #38f07c, #22c45e);
-      color: #04140a;
-      box-shadow: 0 6px 20px rgba(46,229,110,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
-    }
+    .btn:active { transform: scale(0.98); filter: brightness(1.1); }
+    .btn-primary { background: var(--green); color: #0c130e; }
     .btn-ghost { background: none; color: var(--muted); font-size: 14px; }
     .btn-sm { padding: 10px 18px; font-size: 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
     .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -119,9 +110,8 @@
 
     /* ── CARDS ── */
     .card {
-      margin: 10px 16px 0; background: var(--card); border-radius: 18px;
+      margin: 10px 16px 0; background: var(--card); border-radius: 12px;
       border: 1px solid var(--border); padding: 16px 18px;
-      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
     }
     .orientation-banner { margin: 6px 16px 0; background: rgba(46,229,110,0.08); border: 1px solid rgba(46,229,110,0.18); border-radius: 12px; padding: 9px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: rgba(235,255,240,0.85); }
     .steep-banner { display: none; margin: 6px 16px 0; background: rgba(255,69,58,0.10); border: 1px solid rgba(255,69,58,0.3); border-radius: 12px; padding: 9px 14px; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--red); }
@@ -129,7 +119,7 @@
 
     /* ── BREAK SUMMARY CARD ── */
     .break-card { display: flex; align-items: center; justify-content: space-between; }
-    .break-amount { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.5px; text-shadow: 0 0 24px rgba(46,229,110,0.25); transition: color 0.3s ease; }
+    .break-amount { font-size: 3rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.5px; transition: color 0.3s ease; }
     .break-dir { font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
     .severity-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; transition: background 0.3s, color 0.3s; }
     .break-right { text-align: right; }
@@ -146,11 +136,10 @@
     .slider-card label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
     .slider-card label span { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
     input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; height: 28px; }
-    input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgba(46,229,110,0.5), rgba(46,229,110,0.15)); }
+    input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.14); }
     input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; margin-top: -10px;
-      background: radial-gradient(circle at 35% 30%, #fff, #d8e0d8);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.25);
+      -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; margin-top: -9px;
+      background: #e9ece9; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
     }
 
     /* ── METRICS ROW ── */
@@ -173,8 +162,8 @@
     .chip-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .chip { flex: 1; min-width: 80px; padding: 10px 6px; text-align: center; border-radius: 12px; border: 1px solid var(--border); background: var(--card-flat); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
     .chip:active { transform: scale(0.95); }
-    .chip.selected { border-color: var(--green); background: rgba(46,229,110,0.16); color: var(--green); box-shadow: 0 0 14px rgba(46,229,110,0.25) inset; }
-    .chip.selected-bad { border-color: var(--orange); background: rgba(255,159,10,0.14); color: var(--orange); }
+    .chip.selected { border-color: var(--green); background: rgba(63,185,109,0.12); color: var(--green); }
+    .chip.selected-bad { border-color: var(--orange); background: rgba(217,138,43,0.12); color: var(--orange); }
     .modal-section-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 
     /* ── PRACTICE SCREEN ── */
@@ -234,7 +223,7 @@
     .big-icon { font-size: 64px; }
 
     /* ── CANVAS ── */
-    .canvas-wrap { margin: 10px 16px 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08); }
+    .canvas-wrap { margin: 10px 16px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
     #greenCanvas { display: block; width: 100%; }
 
     .recal-btn { display: block; margin: 14px auto 0; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
@@ -242,10 +231,10 @@
 
     /* ── LOCK BUTTON ── */
     .lock-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: none; color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-    .lock-btn.locked { border-color: var(--gold); background: rgba(255,204,0,0.12); color: var(--gold); }
+    .lock-btn.locked { border-color: var(--gold); background: rgba(217,165,20,0.10); color: var(--gold); }
 
     /* ── LOCKED BANNER ── */
-    .locked-banner { margin: 6px 16px 0; background: rgba(255,204,0,0.10); border: 1px solid rgba(255,204,0,0.25); border-radius: 12px; padding: 9px 14px; display: none; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--gold); }
+    .locked-banner { margin: 6px 16px 0; background: rgba(217,165,20,0.08); border: 1px solid rgba(217,165,20,0.25); border-radius: 12px; padding: 9px 14px; display: none; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--gold); }
     .locked-banner.show { display: flex; }
 
     /* ── GREEN SPEED ── */
@@ -259,7 +248,7 @@
 
     /* ── QUICK RE-READ ── */
     .action-row { display: flex; gap: 10px; margin: 10px 16px 0; }
-    .action-btn { flex: 1; padding: 13px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; box-shadow: var(--shadow); transition: transform 0.12s; }
+    .action-btn { flex: 1; padding: 13px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; transition: transform 0.12s; }
     .action-btn:active { transform: scale(0.96); }
 
     /* ── TEMPO CARD ── */
@@ -297,7 +286,6 @@
 
     <!-- ── PERMISSION ── -->
     <div id="permission" class="screen">
-      <div class="big-icon">📱</div>
       <h2>Motion Access Needed</h2>
       <p>Green Reader needs your phone's motion sensors to measure slope.</p>
       <button class="btn btn-primary" style="max-width:280px" onclick="requestPermission()">Allow Motion Access</button>
@@ -312,14 +300,14 @@
           <div class="cal-badge ok" id="calBadge">Calibrated</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔓 Lock</button>
+          <button class="lock-btn" id="lockBtn" onclick="toggleLock()">Lock</button>
           <div class="live-dot" id="liveDot"><span></span> Live</div>
         </div>
       </div>
 
       <!-- Locked banner -->
       <div class="locked-banner" id="lockedBanner">
-        <span>🔒 Reading locked — walk to your ball</span>
+        <span>Reading locked — walk to your ball</span>
         <button onclick="toggleLock()" style="background:none;border:none;color:var(--gold);font-size:13px;font-weight:700;cursor:pointer">Unlock</button>
       </div>
 
@@ -374,8 +362,8 @@
 
       <!-- Action row: re-read + log -->
       <div class="action-row">
-        <button class="action-btn" onclick="quickReread()">⟳ Re-read</button>
-        <button class="action-btn" style="color:var(--gold);border-color:rgba(255,204,0,0.3);background:rgba(255,204,0,0.08)" onclick="openLogModal()">📋 Log Putt</button>
+        <button class="action-btn" onclick="quickReread()">Re-read</button>
+        <button class="action-btn" style="color:var(--gold);border-color:rgba(217,165,20,0.35)" onclick="openLogModal()">Log putt</button>
       </div>
 
       <button class="recal-btn" onclick="showSetup()">↺ Full recalibrate</button>
@@ -476,7 +464,6 @@
       </div>
 
       <div id="statsEmpty" class="empty-state">
-        <div class="empty-icon">📊</div>
         <p>Log putts from the <strong>Read</strong> or <strong>Practice</strong> tabs and your tendencies will appear here.</p>
       </div>
 
@@ -545,15 +532,15 @@
   <!-- ── BOTTOM NAV ── -->
   <nav class="bottom-nav" id="mainNav" style="display:none">
     <button class="nav-btn active" id="navRead" onclick="switchTab('read')">
-      <span class="nav-icon">🎯</span>
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><line x1="12" y1="1.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22.5" y2="12"/></svg>
       <span class="nav-label">Read</span>
     </button>
     <button class="nav-btn" id="navPractice" onclick="switchTab('practice')">
-      <span class="nav-icon">🏋️</span>
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="21" x2="7" y2="3"/><path d="M7 4h10l-2.5 3.5L17 11H7"/></svg>
       <span class="nav-label">Practice</span>
     </button>
     <button class="nav-btn" id="navStats" onclick="switchTab('stats')">
-      <span class="nav-icon">📊</span>
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="5" y1="20" x2="5" y2="13"/><line x1="12" y1="20" x2="12" y2="7"/><line x1="19" y1="20" x2="19" y2="10"/></svg>
       <span class="nav-label">Stats</span>
     </button>
   </nav>
@@ -830,7 +817,7 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   // ── Green surface: tilt-shaded base ──
   const tilt = Math.max(-1, Math.min(1, breakInches / 20));
   const grd  = ctx.createLinearGradient(W*(0.5-tilt*0.4),0, W*(0.5+tilt*0.4),0);
-  grd.addColorStop(0,'#0c3a10'); grd.addColorStop(1,'#1d651d');
+  grd.addColorStop(0,'#16331c'); grd.addColorStop(1,'#265631');
   ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
 
   // Mowing stripes (subtle alternating bands)
@@ -859,36 +846,27 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   const midX = (ballX + cupX) / 2 - lateralPx;
   const midY = (ballY + cupY) / 2;
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
-  ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.65)'; ctx.lineWidth=2.5; ctx.lineCap='round';
-  ctx.shadowColor='rgba(255,255,255,0.4)'; ctx.shadowBlur=6;
-  ctx.stroke();
-  ctx.shadowBlur=0; ctx.setLineDash([]);
+  ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round';
+  ctx.stroke(); ctx.setLineDash([]);
 
   // ── Aim line: gold dashed straight line to the aim point ──
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.lineTo(aimX,aimY);
-  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,214,10,0.9)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(222,176,46,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
-  // ── Phantom hole: layered gold glow + dot ──
-  const glow = ctx.createRadialGradient(aimX, aimY, 2, aimX, aimY, 20);
-  glow.addColorStop(0, 'rgba(255,214,10,0.45)'); glow.addColorStop(1, 'rgba(255,214,10,0)');
-  ctx.beginPath(); ctx.arc(aimX,aimY,20,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
-  ctx.beginPath(); ctx.arc(aimX,aimY,8,0,Math.PI*2);  ctx.fillStyle='#ffd60a'; ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.65)'; ctx.lineWidth=1.5; ctx.stroke();
+  // ── Aim point ──
+  ctx.beginPath(); ctx.arc(aimX,aimY,7,0,Math.PI*2); ctx.fillStyle='#deb02e'; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.5; ctx.stroke();
 
   // AIM label
-  ctx.fillStyle='#ffd60a'; ctx.font='bold 10px -apple-system,sans-serif';
+  ctx.fillStyle='#deb02e'; ctx.font='600 10px -apple-system,sans-serif';
   ctx.textAlign = lateralPx >= 0 ? 'right' : 'left';
-  ctx.fillText('AIM HERE', aimX + (lateralPx >= 0 ? -14 : 14), aimY + 4);
+  ctx.fillText('AIM', aimX + (lateralPx >= 0 ? -13 : 13), aimY + 4);
 
-  // ── Cup: dark interior, crisp rim, flagstick ──
+  // ── Cup: dark interior, crisp rim ──
   ctx.beginPath(); ctx.arc(cupX,cupY,8,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.9)'; ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(cupX, cupY-2); ctx.lineTo(cupX, cupY-22); ctx.stroke();
-  ctx.fillStyle='rgba(255,69,58,0.85)';
-  ctx.beginPath(); ctx.moveTo(cupX, cupY-22); ctx.lineTo(cupX+11, cupY-18); ctx.lineTo(cupX, cupY-14); ctx.closePath(); ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('HOLE', cupX, cupY+20);
+  ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='600 9px -apple-system,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('HOLE', cupX, cupY-16);
 
   // ── Ball: shaded sphere with ground shadow ──
   ctx.beginPath(); ctx.ellipse(ballX, ballY+7, 8, 3, 0, 0, Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fill();
@@ -1182,15 +1160,15 @@ function toggleLock() {
 
   if (isLocked) {
     frozenReading = { ...lastReading };
-    btn.textContent = '🔒 Locked';
+    btn.textContent = 'Locked';
     btn.classList.add('locked');
     banner.classList.add('show');
     if (orient)  orient.style.display = 'none';
     if (liveDot) liveDot.style.opacity = '0.3';
-    showToast('Reading locked 🔒');
+    showToast('Reading locked');
   } else {
     frozenReading = null;
-    btn.textContent = '🔓 Lock';
+    btn.textContent = 'Lock';
     btn.classList.remove('locked');
     banner.classList.remove('show');
     if (orient)  orient.style.display = 'flex';
@@ -1239,7 +1217,7 @@ function quickReread() {
 function showToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-weight:700;font-size:14px;padding:10px 20px;border-radius:20px;z-index:999;pointer-events:none';
+  t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#262b28;color:var(--text);border:1px solid var(--border);font-weight:600;font-size:13px;padding:9px 18px;border-radius:10px;z-index:999;pointer-events:none';
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2000);
 }
