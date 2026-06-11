@@ -1,4 +1,4 @@
-const CACHE = 'green-reader-v2';
+const CACHE = 'green-reader-v3';
 const FILES = [
   '/green-reader/',
   '/green-reader/index.html',

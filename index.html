@@ -13,18 +13,28 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --green:  #33cc66;
-      --gold:   #ffcc00;
-      --blue:   #4da6ff;
-      --orange: #ff9500;
-      --red:    #ff3b30;
-      --bg:     #0a1a0c;
-      --card:   rgba(255,255,255,0.07);
-      --border: rgba(255,255,255,0.10);
-      --text:   #ffffff;
-      --muted:  rgba(255,255,255,0.45);
+      --green:  #2ee56e;
+      --green-dim: #1fa84f;
+      --gold:   #ffd60a;
+      --blue:   #5ab0ff;
+      --orange: #ff9f0a;
+      --red:    #ff453a;
+      --bg:     #070d08;
+      --card:   linear-gradient(160deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035));
+      --card-flat: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.09);
+      --text:   #f5f7f5;
+      --muted:  rgba(235,245,235,0.48);
+      --shadow: 0 8px 24px rgba(0,0,0,0.35);
     }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
+    html, body {
+      height: 100%;
+      background: radial-gradient(120% 90% at 50% 0%, #0d1f10 0%, var(--bg) 60%) fixed;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
 
     /* ── LAYOUT ── */
     .app { display: flex; flex-direction: column; height: 100dvh; }
@@ -35,18 +45,25 @@
     /* ── BOTTOM NAV ── */
     .bottom-nav {
       display: flex; border-top: 1px solid var(--border);
-      background: rgba(10,26,12,0.96); backdrop-filter: blur(12px);
+      background: rgba(7,13,8,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
       padding-bottom: env(safe-area-inset-bottom);
       flex-shrink: 0;
     }
     .nav-btn {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 10px 0 8px; background: none; border: none; cursor: pointer; gap: 3px;
+      position: relative; transition: transform 0.15s ease;
     }
-    .nav-btn .nav-icon { font-size: 22px; }
-    .nav-btn .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; }
+    .nav-btn:active { transform: scale(0.92); }
+    .nav-btn .nav-icon { font-size: 22px; opacity: 0.55; transition: opacity 0.2s; }
+    .nav-btn .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; transition: color 0.2s; }
     .nav-btn.active .nav-label { color: var(--green); }
-    .nav-btn.active .nav-icon  { filter: none; }
+    .nav-btn.active .nav-icon  { opacity: 1; }
+    .nav-btn.active::before {
+      content: ''; position: absolute; top: -1px; left: 25%; right: 25%; height: 2px;
+      background: var(--green); border-radius: 0 0 2px 2px;
+      box-shadow: 0 0 12px rgba(46,229,110,0.8);
+    }
 
     /* ── SETUP SCREEN ── */
     #setup {
@@ -79,8 +96,13 @@
     .step p { font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.4; padding-top: 3px; }
 
     /* ── BUTTONS ── */
-    .btn { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; }
-    .btn-primary { background: var(--green); color: #000; }
+    .btn { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: transform 0.12s ease, filter 0.12s ease; }
+    .btn:active { transform: scale(0.97); filter: brightness(1.15); }
+    .btn-primary {
+      background: linear-gradient(180deg, #38f07c, #22c45e);
+      color: #04140a;
+      box-shadow: 0 6px 20px rgba(46,229,110,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
     .btn-ghost { background: none; color: var(--muted); font-size: 14px; }
     .btn-sm { padding: 10px 18px; font-size: 14px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
     .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -96,14 +118,18 @@
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.2} }
 
     /* ── CARDS ── */
-    .card { margin: 10px 16px 0; background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 16px 18px; }
-    .orientation-banner { margin: 6px 16px 0; background: rgba(51,204,102,0.10); border-radius: 12px; padding: 9px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+    .card {
+      margin: 10px 16px 0; background: var(--card); border-radius: 18px;
+      border: 1px solid var(--border); padding: 16px 18px;
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .orientation-banner { margin: 6px 16px 0; background: rgba(46,229,110,0.08); border: 1px solid rgba(46,229,110,0.18); border-radius: 12px; padding: 9px 14px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: rgba(235,255,240,0.85); }
 
     /* ── BREAK SUMMARY CARD ── */
     .break-card { display: flex; align-items: center; justify-content: space-between; }
-    .break-amount { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+    .break-amount { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.5px; text-shadow: 0 0 24px rgba(46,229,110,0.25); transition: color 0.3s ease; }
     .break-dir { font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
-    .severity-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
+    .severity-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; transition: background 0.3s, color 0.3s; }
     .break-right { text-align: right; }
     .clock-label { font-size: 1rem; font-weight: 700; }
     .clock-sub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
@@ -116,8 +142,14 @@
 
     /* ── SLIDER ── */
     .slider-card label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-    .slider-card label span { font-weight: 700; color: var(--text); }
-    input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; }
+    .slider-card label span { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; height: 28px; }
+    input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, rgba(46,229,110,0.5), rgba(46,229,110,0.15)); }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; margin-top: -10px;
+      background: radial-gradient(circle at 35% 30%, #fff, #d8e0d8);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.25);
+    }
 
     /* ── METRICS ROW ── */
     .metrics { display: flex; align-items: center; }
@@ -137,9 +169,10 @@
     .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
     .modal .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
     .chip-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .chip { flex: 1; min-width: 80px; padding: 10px 6px; text-align: center; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-    .chip.selected { border-color: var(--green); background: rgba(51,204,102,0.18); color: var(--green); }
-    .chip.selected-bad { border-color: var(--orange); background: rgba(255,149,0,0.15); color: var(--orange); }
+    .chip { flex: 1; min-width: 80px; padding: 10px 6px; text-align: center; border-radius: 12px; border: 1px solid var(--border); background: var(--card-flat); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .chip:active { transform: scale(0.95); }
+    .chip.selected { border-color: var(--green); background: rgba(46,229,110,0.16); color: var(--green); box-shadow: 0 0 14px rgba(46,229,110,0.25) inset; }
+    .chip.selected-bad { border-color: var(--orange); background: rgba(255,159,10,0.14); color: var(--orange); }
     .modal-section-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
 
     /* ── PRACTICE SCREEN ── */
@@ -199,7 +232,7 @@
     .big-icon { font-size: 64px; }
 
     /* ── CANVAS ── */
-    .canvas-wrap { margin: 10px 16px 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+    .canvas-wrap { margin: 10px 16px 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08); }
     #greenCanvas { display: block; width: 100%; }
 
     .recal-btn { display: block; margin: 14px auto 0; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
@@ -218,12 +251,14 @@
     .speed-card .speed-label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; }
     .speed-card .speed-label span { color: var(--text); font-size: 13px; text-transform: none; letter-spacing: 0; }
     .speed-chips { display: flex; gap: 8px; }
-    .speed-chip { flex: 1; padding: 9px 4px; text-align: center; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
-    .speed-chip.selected { border-color: var(--green); background: rgba(51,204,102,0.15); color: var(--green); }
+    .speed-chip { flex: 1; padding: 9px 4px; text-align: center; border-radius: 10px; border: 1px solid var(--border); background: var(--card-flat); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .speed-chip:active { transform: scale(0.94); }
+    .speed-chip.selected { border-color: var(--green); background: rgba(46,229,110,0.15); color: var(--green); }
 
     /* ── QUICK RE-READ ── */
     .action-row { display: flex; gap: 10px; margin: 10px 16px 0; }
-    .action-btn { flex: 1; padding: 13px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; }
+    .action-btn { flex: 1; padding: 13px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; box-shadow: var(--shadow); transition: transform 0.12s; }
+    .action-btn:active { transform: scale(0.96); }
 
     /* ── TEMPO CARD ── */
   </style>
@@ -760,10 +795,14 @@ function updateUI(r) {
   drawDiagram(breakIn, puttDistance, effectiveDist);
 }
 
+function activeReading() {
+  return (isLocked && frozenReading) ? frozenReading : lastReading;
+}
+
 function onDistChange(val) {
   puttDistance = parseInt(val);
   document.getElementById('distLabel').textContent = val + ' ft';
-  updateUI(lastReading);
+  updateUI(activeReading());
 }
 function onBlindDistChange(val) {
   blindDist = parseInt(val);
@@ -775,14 +814,29 @@ function onBlindDistChange(val) {
 // ────────────────────────────────────────────────────────
 function drawDiagram(breakInches, actualDist, effectiveDist) {
   if (!canvas) { canvas = document.getElementById('greenCanvas'); ctx = canvas.getContext('2d'); }
-  const W = canvas.offsetWidth;
-  canvas.width = W; canvas.height = 280;
-  const H = 280;
+  const W = canvas.offsetWidth, H = 280;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+  // ── Green surface: tilt-shaded base ──
   const tilt = Math.max(-1, Math.min(1, breakInches / 20));
   const grd  = ctx.createLinearGradient(W*(0.5-tilt*0.4),0, W*(0.5+tilt*0.4),0);
-  grd.addColorStop(0,'#0d3810'); grd.addColorStop(1,'#1a5c1a');
+  grd.addColorStop(0,'#0c3a10'); grd.addColorStop(1,'#1d651d');
   ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
+
+  // Mowing stripes (subtle alternating bands)
+  for (let i = 0; i < 7; i++) {
+    if (i % 2 === 0) continue;
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    ctx.fillRect(0, i * H/7, W, H/7);
+  }
+
+  // Vignette for depth
+  const vg = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.85);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
 
   const ballX = W/2, ballY = H*0.83, cupX = W/2, cupY = H*0.15;
   const span  = ballY - cupY;
@@ -794,39 +848,51 @@ function drawDiagram(breakInches, actualDist, effectiveDist) {
   const aimY = Math.max(14, Math.min(ballY - 24, ballY - span * distRatio));
   const aimX = cupX - lateralPx;  // aim OPPOSITE to break direction
 
-  // Ball path — white dashed curve showing how the ball breaks to the hole
+  // ── Ball path: white dashed curve bulging toward aim side, falling to hole ──
   const midX = (ballX + cupX) / 2 - lateralPx;
   const midY = (ballY + cupY) / 2;
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.quadraticCurveTo(midX,midY,cupX,cupY);
-  ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke(); ctx.setLineDash([]);
+  ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,0.65)'; ctx.lineWidth=2.5; ctx.lineCap='round';
+  ctx.shadowColor='rgba(255,255,255,0.4)'; ctx.shadowBlur=6;
+  ctx.stroke();
+  ctx.shadowBlur=0; ctx.setLineDash([]);
 
-  // Aim line — gold dashed straight line to the aim point
+  // ── Aim line: gold dashed straight line to the aim point ──
   ctx.beginPath(); ctx.moveTo(ballX,ballY); ctx.lineTo(aimX,aimY);
-  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,204,0,0.85)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
+  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,214,10,0.9)'; ctx.lineWidth=2; ctx.stroke(); ctx.setLineDash([]);
 
-  // Phantom hole glow + dot
-  ctx.beginPath(); ctx.arc(aimX,aimY,14,0,Math.PI*2); ctx.fillStyle='rgba(255,204,0,0.12)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(aimX,aimY,8,0,Math.PI*2);  ctx.fillStyle='rgba(255,204,0,0.95)'; ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+  // ── Phantom hole: layered gold glow + dot ──
+  const glow = ctx.createRadialGradient(aimX, aimY, 2, aimX, aimY, 20);
+  glow.addColorStop(0, 'rgba(255,214,10,0.45)'); glow.addColorStop(1, 'rgba(255,214,10,0)');
+  ctx.beginPath(); ctx.arc(aimX,aimY,20,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
+  ctx.beginPath(); ctx.arc(aimX,aimY,8,0,Math.PI*2);  ctx.fillStyle='#ffd60a'; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.65)'; ctx.lineWidth=1.5; ctx.stroke();
 
   // AIM label
-  ctx.fillStyle='rgba(255,204,0,0.95)'; ctx.font='bold 10px -apple-system,sans-serif';
+  ctx.fillStyle='#ffd60a'; ctx.font='bold 10px -apple-system,sans-serif';
   ctx.textAlign = lateralPx >= 0 ? 'right' : 'left';
   ctx.fillText('AIM HERE', aimX + (lateralPx >= 0 ? -14 : 14), aimY + 4);
 
-  // Cup (dimmed — not where you aim)
-  ctx.beginPath(); ctx.arc(cupX,cupY,8,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.5; ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('HOLE', cupX, cupY-14);
+  // ── Cup: dark interior, crisp rim, flagstick ──
+  ctx.beginPath(); ctx.arc(cupX,cupY,8,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.9)'; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cupX, cupY-2); ctx.lineTo(cupX, cupY-22); ctx.stroke();
+  ctx.fillStyle='rgba(255,69,58,0.85)';
+  ctx.beginPath(); ctx.moveTo(cupX, cupY-22); ctx.lineTo(cupX+11, cupY-18); ctx.lineTo(cupX, cupY-14); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('HOLE', cupX, cupY+20);
 
-  // Ball
-  ctx.beginPath(); ctx.arc(ballX,ballY,9,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+  // ── Ball: shaded sphere with ground shadow ──
+  ctx.beginPath(); ctx.ellipse(ballX, ballY+7, 8, 3, 0, 0, Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fill();
+  const bg2 = ctx.createRadialGradient(ballX-3, ballY-3, 1, ballX, ballY, 9);
+  bg2.addColorStop(0, '#ffffff'); bg2.addColorStop(1, '#b8c4b8');
+  ctx.beginPath(); ctx.arc(ballX,ballY,9,0,Math.PI*2); ctx.fillStyle=bg2; ctx.fill();
   ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='bold 9px -apple-system,sans-serif'; ctx.textAlign='center';
-  ctx.fillText('BALL', ballX, ballY+21);
+  ctx.fillText('BALL', ballX, ballY+24);
 
   // Orientation hint
-  ctx.fillStyle='rgba(255,255,255,0.22)'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='left';
+  ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='9px -apple-system,sans-serif'; ctx.textAlign='left';
   ctx.fillText('↑ top of phone', 10, 13);
 }
 
@@ -849,8 +915,9 @@ function selectLog(type, val, el) {
 
 function saveLogResult() {
   if (!logSelection.break || !logSelection.pace) { alert('Please select both break and pace results.'); return; }
-  const breakIn = calcBreak(lastReading.lateral, lastReading.longitudinal, puttDistance);
-  const effDist = calcEffectiveDistance(lastReading.longitudinal, puttDistance);
+  const r = activeReading();
+  const breakIn = calcBreak(r.lateral, r.longitudinal, puttDistance);
+  const effDist = calcEffectiveDistance(r.longitudinal, puttDistance);
   addPutt({
     mode: 'live',
     distance: puttDistance,
@@ -1134,7 +1201,7 @@ function setSpeed(speed, el) {
   document.querySelectorAll('.speed-chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('speedLabel').textContent = SPEED_SETTINGS[speed].label;
-  updateUI(isLocked ? frozenReading : lastReading);
+  updateUI(activeReading());
   showToast('Green speed: ' + SPEED_SETTINGS[speed].label);
 }
 
@@ -1177,9 +1244,13 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catc
 
 window.addEventListener('load', () => {
   const observer = new MutationObserver(() => {
-    if (document.getElementById('read').classList.contains('active')) drawDiagram(0, puttDistance, puttDistance);
+    if (document.getElementById('read').classList.contains('active')) updateUI(activeReading());
   });
   observer.observe(document.getElementById('read'), { attributes:true });
+});
+
+window.addEventListener('resize', () => {
+  if (currentTab === 'read') updateUI(activeReading());
 });
 </script>
 </body>
