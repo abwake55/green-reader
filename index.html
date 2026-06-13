@@ -276,11 +276,11 @@
         <div class="step"><div class="step-num">1</div><p>Stand behind your ball, facing the hole</p></div>
         <div class="step"><div class="step-num">2</div><p>Lay phone flat on the green between ball and hole</p></div>
         <div class="step"><div class="step-num">3</div><p>Point the <strong>TOP</strong> of the phone toward the hole</p></div>
-        <div class="step"><div class="step-num">4</div><p>Tap Calibrate to zero any tilt</p></div>
+        <div class="step"><div class="step-num">4</div><p>Hold still for a second — wait for <strong>Steady</strong></p></div>
       </div>
       <div style="width:100%">
-        <button class="btn btn-primary" onclick="startApp()">Calibrate &amp; Start</button>
-        <button class="btn btn-ghost" style="margin-top:10px" onclick="skipCalibration()">Skip Calibration</button>
+        <button class="btn btn-primary" onclick="startApp()">Start Reading</button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="zeroSensors()">Zero sensors (only on a level surface)</button>
       </div>
     </div>
 
@@ -297,7 +297,7 @@
       <div class="topbar">
         <div>
           <h2>Green Reader</h2>
-          <div class="cal-badge ok" id="calBadge">Calibrated</div>
+          <div class="cal-badge warn" id="calBadge">Hold still…</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <button class="lock-btn" id="lockBtn" onclick="toggleLock()">Lock</button>
@@ -366,7 +366,7 @@
         <button class="action-btn" style="color:var(--gold);border-color:rgba(217,165,20,0.35)" onclick="openLogModal()">Log putt</button>
       </div>
 
-      <button class="recal-btn" onclick="showSetup()">↺ Full recalibrate</button>
+      <button class="recal-btn" onclick="showSetup()">Setup guide</button>
     </div>
 
     <!-- ── PRACTICE ── -->
@@ -643,11 +643,15 @@ function switchTab(tab) {
 async function startApp() {
   const ok = await ensurePermission();
   if (!ok) return;
-  calibrate();
   launchMain();
 }
-function skipCalibration() {
-  ensurePermission().then(ok => { if (ok) launchMain(); });
+// Optional: zero out sensor/case bias. Only valid on a known-level surface —
+// never on the green, since that would erase the slope being measured.
+async function zeroSensors() {
+  const ok = await ensurePermission();
+  if (!ok) return;
+  showToast('Hold still on a level surface…');
+  setTimeout(() => { calibrate(); showToast('Sensors zeroed'); }, 1500);
 }
 function launchMain() {
   document.getElementById('mainNav').style.display = 'flex';
@@ -671,7 +675,7 @@ async function ensurePermission() {
 }
 async function requestPermission() {
   const ok = await ensurePermission();
-  if (ok) { calibrate(); launchMain(); }
+  if (ok) launchMain();
 }
 
 // ────────────────────────────────────────────────────────
@@ -682,8 +686,6 @@ function calibrate() {
   calibrationGamma = lastReading.gamma || 0;
   isCalibrated = true;
   readingBuffer = []; // clear smoothing buffer on recalibrate
-  const badge = document.getElementById('calBadge');
-  if (badge) { badge.textContent = 'Calibrated'; badge.className = 'cal-badge ok'; }
 }
 
 // ────────────────────────────────────────────────────────
@@ -699,9 +701,9 @@ function onOrientation(e) {
   const angle = Math.sqrt(lateralDeg**2 + longitudinalDeg**2);
   const raw = { beta: rawBeta, gamma: rawGamma, angle, lateral: lateralDeg, longitudinal: longitudinalDeg };
 
-  // Smooth over last 12 readings to reduce jitter
+  // Smooth over last 20 readings to reduce jitter
   readingBuffer.push(raw);
-  if (readingBuffer.length > 12) readingBuffer.shift();
+  if (readingBuffer.length > 20) readingBuffer.shift();
   const n = readingBuffer.length;
   lastReading = {
     beta:         raw.beta,
@@ -710,6 +712,15 @@ function onOrientation(e) {
     lateral:      readingBuffer.reduce((s,r) => s + r.lateral, 0) / n,
     longitudinal: readingBuffer.reduce((s,r) => s + r.longitudinal, 0) / n,
   };
+
+  // Stability: reading is trustworthy only when recent samples agree
+  const badge = document.getElementById('calBadge');
+  if (badge && !isLocked) {
+    const variance = readingBuffer.reduce((s,r) => s + (r.lateral - lastReading.lateral)**2, 0) / n;
+    const steady = n >= 12 && Math.sqrt(variance) < 0.35;
+    badge.textContent = steady ? 'Steady' : 'Hold still…';
+    badge.className = 'cal-badge ' + (steady ? 'ok' : 'warn');
+  }
 
   if (currentTab === 'read' || currentTab === 'practice') {
     if (!isLocked) updateUI(lastReading);
@@ -1206,9 +1217,10 @@ function initSpeed() {
 // ────────────────────────────────────────────────────────
 function quickReread() {
   if (isLocked) { toggleLock(); } // unlock first
-  calibrate();
-  updateUI(lastReading);
-  showToast('Re-read ✓');
+  // Just restart the smoothing window — never recalibrate on the green,
+  // that would zero out the slope we're trying to measure
+  readingBuffer = [];
+  showToast('Re-reading — hold still');
 }
 
 // ────────────────────────────────────────────────────────
